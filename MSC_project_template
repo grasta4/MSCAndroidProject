@@ -6,10 +6,22 @@ For example, if the user wants to go to the copy shop and the supermarket, the a
 With this information, it notifies the user when they are close to the location where they have tasks that need to be done.
 
 Context-aware functionalities
-•	User position
-•	User identity
-•	Date, time of day
-•	Calendar
+•	User position:
+	The user position will be monitored constantly to track if the user is near to a task. As soon as the user
+	enters the task, the system thereby knows when to send out alerts. This will also help the user track tasks
+	by using the map function. (GeoFence?)
+	
+•	User identity:
+	With user identity, the app can easily track the preferences of the user and it will also be able to track
+	different users.
+	
+•	Date, time of day:
+	If the user wants to specify tasks with time restrictions or special alerts to different times, the application can
+	keep track of the date and time of the day.
+	
+•	Calendar:
+	Mostly comparable to 'Date, time of day'.
+	
 •	Orientation (possibly)
 •	Temperature (possibly)
 
