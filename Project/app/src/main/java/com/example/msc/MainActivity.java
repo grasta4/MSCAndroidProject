@@ -17,4 +17,9 @@ public class MainActivity extends AppCompatActivity {
         Intent mapsIntent = new Intent(this, MapsActivity.class);
         startActivity(mapsIntent);
     }
+
+    public void newTask(View v) {
+        Intent newTaskIntent = new Intent(this, AddTaskActivity.class);
+        startActivity(newTaskIntent);
+    }
 }
