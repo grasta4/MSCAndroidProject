@@ -4,6 +4,13 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.example.msc"
+
+		javaCompileOptions {
+			annotationProcessorOptions {
+				arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+			}
+		}
+
         minSdkVersion 15
         targetSdkVersion 28
         versionCode 1

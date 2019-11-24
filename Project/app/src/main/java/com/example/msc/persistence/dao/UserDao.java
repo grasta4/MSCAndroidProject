@@ -10,13 +10,13 @@ import com.example.msc.persistence.entities.User;
 @Dao
 public interface UserDao {
     @Insert
-    public long AddUser(final User task);
+    public void AddUser(final User task);
 
     @Update
-    public long UpdateUser(final User task);
+    public void UpdateUser(final User task);
 
     @Delete
-    public long DeleteUser(final User task);
+    public void DeleteUser(final User task);
 
     @Query("select * from user where user.username ==:username")
     public User getUserByUsername(final String username);

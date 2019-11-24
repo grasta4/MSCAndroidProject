@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-import java.time.Instant;
 
 @Entity(tableName = "task")
 public class Task {
@@ -18,7 +17,7 @@ public class Task {
     private String location;
 
     @NonNull
-    private Instant timestamp;
+    private long timestamp;
 
     @NonNull
     private String user;
@@ -28,7 +27,7 @@ public class Task {
 
     }
 
-    public Task(final int id, final String name, final String location, final Instant timestamp, final String user) {
+    public Task(final int id, final String name, final String location, final long timestamp, final String user) {
         this.id = id;
         this.name = name;
         this.location = location;
@@ -60,11 +59,11 @@ public class Task {
         this.location = location;
     }
 
-    public Instant getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(final Instant timestamp) {
+    public void setTimestamp(final long timestamp) {
         this.timestamp = timestamp;
     }
 
