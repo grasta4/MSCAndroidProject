@@ -15,44 +15,22 @@
         android:layout_marginTop="50dp"
         android:layout_marginEnd="50dp"
         android:layout_marginRight="50dp"
+        android:onClick="onClickAddTask"
         android:text="@string/add_task"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/eTinsertTask" />
 
     <EditText
-        android:id="@+id/eTinsertLocation"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_marginTop="100dp"
-        android:ems="10"
-        android:hint="@string/insert_location"
-        android:inputType="textPersonName"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
         android:id="@+id/eTinsertTask"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
-        android:layout_marginTop="10dp"
         android:ems="10"
         android:hint="@string/insert_task"
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/eTinsertLocation" />
-
-    <TextView
-        android:id="@+id/tvAddTaskID"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_marginBottom="10dp"
-        android:text="TextView"
-        app:layout_constraintBottom_toTopOf="@+id/eTinsertLocation"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <fragment
         android:id="@+id/map"

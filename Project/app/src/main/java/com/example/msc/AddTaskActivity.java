@@ -2,6 +2,7 @@ package com.example.msc;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -10,13 +11,18 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 
@@ -24,7 +30,9 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
     private GoogleMap mMap;
     private final int locationPermission = 15; // 15 is the id given to this permission
-
+    private LatLng selectedLocation;
+    private String taskDescription;
+    private Marker locationMarker;
 
 
     @Override
@@ -35,28 +43,24 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        /* FusedLocationProviderClient mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // do something
-                        }
-                    });
+        // enables real-time change of the taskDescription variable
+        EditText taskDescriptionParse = findViewById(R.id.eTinsertTask);
+        taskDescriptionParse.addTextChangedListener(new TextWatcher() {
 
-        LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY); */
+            public void afterTextChanged(Editable e) {}
 
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                taskDescription = s.toString();
+            }
+        });
     }
 
     @Override
     public void onStart() {
         super.onStart();
-
-
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -95,9 +99,6 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
         LocationListener userLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
-                //LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                //locationMarker.setPosition(userLocation);
-                //mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -119,21 +120,50 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
         Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        mMap.addMarker(new MarkerOptions().position(
+
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                selectedLocation = new LatLng(marker.getPosition().latitude, marker.getPosition().longitude);
+                Log.d("myApp", "marker moved to" + selectedLocation);
+            }
+
+            @Override
+            public void onMarkerDrag(Marker arg0) {
+            }
+        });
+
+        // marker on map for the position of the task
+        locationMarker = mMap.addMarker(new MarkerOptions().position(
                 (new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude())))
-                .title("user location"));
+                .title("Selected Location").draggable(true));
+
+        // default position selected for intent if marker is not moved
+        selectedLocation = new LatLng(locationMarker.getPosition().latitude, locationMarker.getPosition().longitude);
+
+        // camera moves to the user's location
         mMap.animateCamera(CameraUpdateFactory.newLatLng(
                 new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude())));
 
         locationManager.removeUpdates(userLocationListener);
 
-
     }
 
 
-    // TODO: add location listener for 'insert location' text field
-    // TODO: add ID field + id handler
-    // TODO: add activity that confirms the location on the map with preview
+    public void onClickAddTask(View v) {
+        Intent addTaskIntent = new Intent(this, MapsActivity.class);
+        // puts location and description to the intent
+        addTaskIntent.putExtra("SelectedLocation", selectedLocation);
+        addTaskIntent.putExtra("TaskDescription", taskDescription);
+        Log.d("myApp", taskDescription);
 
+        startActivity(addTaskIntent);
+
+        // TODO: Task description is not put extra, dont know why
+    }
 
 }
