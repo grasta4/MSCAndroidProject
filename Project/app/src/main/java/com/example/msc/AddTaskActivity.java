@@ -9,6 +9,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -31,7 +32,7 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
     private GoogleMap mMap;
     private final int locationPermission = 15; // 15 is the id given to this permission
     private LatLng selectedLocation;
-    private String taskDescription;
+    private String taskDescription = null;
     private Marker locationMarker;
 
 
@@ -146,8 +147,8 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
         selectedLocation = new LatLng(locationMarker.getPosition().latitude, locationMarker.getPosition().longitude);
 
         // camera moves to the user's location
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(
-                new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude())));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()), 16.0f));
 
         locationManager.removeUpdates(userLocationListener);
 
@@ -155,13 +156,22 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
 
     public void onClickAddTask(View v) {
-        Intent addTaskIntent = new Intent(this, MapsActivity.class);
-        // puts location and description to the intent
-        addTaskIntent.putExtra("SelectedLocation", selectedLocation);
-        addTaskIntent.putExtra("TaskDescription", taskDescription);
-        Log.d("myApp", taskDescription);
+        if (taskDescription == null || taskDescription == "") {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this)
+                    .setTitle("Missing task description")
+                    .setMessage("Please provide a task description before continuing.");
+            alert.setPositiveButton("OK", null);
+            AlertDialog alertDialog = alert.create();
+            alertDialog.show();
+        } else {
+            Intent addTaskIntent = new Intent(this, MapsActivity.class);
+            // puts location and description to the intent
+            addTaskIntent.putExtra("SelectedLocation", selectedLocation);
+            addTaskIntent.putExtra("TaskDescription", taskDescription);
+            Log.d("myApp", taskDescription);
 
-        startActivity(addTaskIntent);
+            startActivity(addTaskIntent);
+        }
 
         // TODO: Task description is not put extra, dont know why
     }
