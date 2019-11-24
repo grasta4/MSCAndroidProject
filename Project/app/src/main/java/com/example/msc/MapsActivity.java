@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -23,8 +22,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private LatLng selectedPosition;
-    private final int locationPermission = 15;
+    private LatLng selectedPosition = null;
+    private final int locationPermission = 14;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +33,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermission);
+        }
     }
 
 
@@ -63,11 +68,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                1000,
-                10,
-                userLocationListener);
-
         Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         // marker of the user's position
@@ -79,16 +79,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()), 16.0f));
 
-        locationManager.removeUpdates(userLocationListener);
-
         // TODO: create a location mark that actually moves with the user
 
+        Bundle locationBundle = getIntent().getExtras();
+        if (locationBundle != null) {
 
-        selectedPosition = getIntent().getExtras().getParcelable("SelectedLocation");
-        String taskDescription = getIntent().getExtras().getParcelable("TaskDescription");
-        Log.d("myApp", ""+taskDescription);
+            selectedPosition = getIntent().getExtras().getParcelable("SelectedLocation");
+            String taskDescription = getIntent().getExtras().getString("TaskDescription");
+            Log.d("myApp", "");
 
-        mMap.addMarker(new MarkerOptions().position(selectedPosition).title(taskDescription));
+            mMap.addMarker(new MarkerOptions().position(selectedPosition).title(taskDescription));
+        }
 
     }
 

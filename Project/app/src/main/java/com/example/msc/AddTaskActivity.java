@@ -44,6 +44,11 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermission);
+        }
 
         // enables real-time change of the taskDescription variable
         EditText taskDescriptionParse = findViewById(R.id.eTinsertTask);
@@ -165,15 +170,17 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
             alertDialog.show();
         } else {
             Intent addTaskIntent = new Intent(this, MapsActivity.class);
+
+            Bundle locationBundle = new Bundle();
             // puts location and description to the intent
-            addTaskIntent.putExtra("SelectedLocation", selectedLocation);
-            addTaskIntent.putExtra("TaskDescription", taskDescription);
+            locationBundle.putParcelable("SelectedLocation", selectedLocation);
+            locationBundle.putString("TaskDescription", taskDescription);
+            addTaskIntent.putExtras(locationBundle);
             Log.d("myApp", taskDescription);
 
             startActivity(addTaskIntent);
         }
 
-        // TODO: Task description is not put extra, dont know why
     }
 
 }
