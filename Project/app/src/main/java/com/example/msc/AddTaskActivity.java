@@ -26,6 +26,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.Map;
+
 
 public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -44,11 +46,7 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermission);
-        }
+        checkPermission();
 
         // enables real-time change of the taskDescription variable
         EditText taskDescriptionParse = findViewById(R.id.eTinsertTask);
@@ -68,11 +66,7 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
     public void onStart() {
         super.onStart();
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermission);
-        }
+        checkPermission();
     }
 
 
@@ -97,11 +91,7 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermission);
-        }
+        checkPermission();
 
         LocationListener userLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
@@ -159,6 +149,14 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
     }
 
+    public void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermission);
+        }
+    }
+
 
     public void onClickAddTask(View v) {
         if (taskDescription == null || taskDescription == "") {
@@ -172,11 +170,12 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
             Intent addTaskIntent = new Intent(this, MapsActivity.class);
 
             Bundle locationBundle = new Bundle();
-            // puts location and description to the intent
+            // puts location to the intent to move camera when creating a new task
             locationBundle.putParcelable("SelectedLocation", selectedLocation);
-            locationBundle.putString("TaskDescription", taskDescription);
             addTaskIntent.putExtras(locationBundle);
             Log.d("myApp", taskDescription);
+
+            TaskLocations.taskLocations.put(taskDescription, selectedLocation);
 
             startActivity(addTaskIntent);
         }
@@ -184,3 +183,5 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
     }
 
 }
+
+//TODO: Kill activity after onClick
