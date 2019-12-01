@@ -2,6 +2,7 @@ package com.example.msc;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -13,6 +14,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 
@@ -238,6 +240,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.makeText(this, "Please Install google play services to use this application", Toast.LENGTH_LONG).show();
         }
         return false;
+    }
+
+    public void returnHome(View v) {
+        Intent returnIntent = new Intent(this, MainActivity.class);
+        startActivity(returnIntent);
     }
 
 }

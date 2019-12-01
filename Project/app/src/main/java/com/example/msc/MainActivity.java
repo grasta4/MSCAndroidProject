@@ -36,6 +36,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(newTaskIntent);
     }
 
+    public void endTask(View v) {
+        Intent endTaskIntent = new Intent(this, EndTaskActivity.class);
+        startActivity(endTaskIntent);
+    }
+
     // checks if permissions are granted and gives a response accordingly
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
