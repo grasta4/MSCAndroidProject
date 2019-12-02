@@ -9,6 +9,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -29,13 +30,18 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -49,6 +55,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Location currentUserPosition;
     private LocationRequest mLocationRequest;
     private FusedLocationProviderClient fusedLocationProviderClient;
+    private Marker userMarker;
+    private LocationCallback thisLocationCallback;
 
     protected ArrayList<Geofence> geofenceArrayList;
 
@@ -62,6 +70,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
+        // TODO: FOR BACKGROUND
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(3000); // 3 seconds interval
+        mLocationRequest.setFastestInterval(3000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        fusedLocationProviderClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            userMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("testy"));
+                        }
+                    }
+                });
+
+
+        // TODO: FOR BACKGROUND
+        thisLocationCallback = new LocationCallback() {
+
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                if (locationResult.getLastLocation() == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    location = locationResult.getLastLocation();
+                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0f));
+                    if (userMarker == null)
+                        userMarker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker()).position(latLng).title("testy"));
+                    else
+                        AnimateMarker.animateMarkerToGB(userMarker, latLng, new LatLngInterpolator.Spherical());
+                }
+            }
+        };
+
         checkPermission();
     }
 
@@ -70,7 +119,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        startLocationUpdates();
         geofenceArrayList = new ArrayList<Geofence>();
 
         /*
@@ -96,10 +145,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
                             Geofence.GEOFENCE_TRANSITION_EXIT)
                     .build());
+
             // marker that shows the location
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(entry.getValue().latitude, entry.getValue().longitude))
-                    .title(entry.getKey()));
+                    .title(entry.getKey())
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin)));
+
             // circle that visualizes the Geofence
             mMap.addCircle(new CircleOptions()
                     .center(new LatLng(entry.getValue().latitude, entry.getValue().longitude))
@@ -110,25 +162,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         checkPermission();
 
+
         LocationListener userLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
-
-                // TODO: to be revised
-                LocationCallback locationCallback = new LocationCallback() {
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-                        super.onLocationResult(locationResult);
-                        // Checks if a location can be fetched.
-                        if (locationResult.getLastLocation() == null) {
-                            return;
-                        }
-                        currentUserPosition = locationResult.getLastLocation();
-                        LatLng latLng = new LatLng(currentUserPosition.getLatitude(), currentUserPosition.getLongitude());
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0f));
-                        mMap.addMarker(new MarkerOptions().position(latLng).title("testtstt"));
-                        }
-                };
-
+                if (userMarker != null) {
+                    userMarker.remove();
+                }
+                userMarker = mMap.addMarker(new MarkerOptions().position(
+                        (new LatLng(location.getLatitude(), location.getLongitude())))
+                        .title("User's Location").icon(BitmapDescriptorFactory.fromResource(R.drawable.obesity)));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(location.getLatitude(),
+                                location.getLongitude()), 16.0f));
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -141,37 +186,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-        // TODO: to be revised
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(3000); // 3 seconds interval
-        mLocationRequest.setFastestInterval(3000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 10, userLocationListener);
+
         Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-
 
         /*
          * Moves camera to the newly created task if activity is called through intent. If activity
          * is called naturally, camera moves to the user's location.
          */
+
         Bundle locationBundle = getIntent().getExtras();
         if (locationBundle != null) {
 
             selectedPosition = getIntent().getExtras().getParcelable("SelectedLocation");
-
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPosition, 16.0f));
         } else {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
                     new LatLng(lastKnownLocation.getLatitude(),
                             lastKnownLocation.getLongitude()), 16.0f));
         }
-        // marker of the user's position
-        mMap.addMarker(new MarkerOptions().position(
+
+        userMarker = mMap.addMarker(new MarkerOptions().position(
                 (new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude())))
                 .title("User's Location"));
-
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(lastKnownLocation.getLatitude(),
+                        lastKnownLocation.getLongitude()), 16.0f));
 
 
     }
@@ -179,14 +223,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-        // TODO: to be revised
-        if (checkForGooglePlayService()) {
-            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-            currentLocationUpdater();
-        }
+        startLocationUpdates(); // TODO: FOR BACKGROUND
     }
 
-    // TODO: to be revised
+    // TODO: FOR BACKGROUND
+    private void startLocationUpdates() {
+        fusedLocationProviderClient.requestLocationUpdates(mLocationRequest,
+                thisLocationCallback,
+                Looper.getMainLooper());
+    }
+
+
+    // TODO: FOR BACKGROUND
     private void currentLocationUpdater() {
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -195,7 +243,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkPermission();
         }
+
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, thisLocationCallback, Looper.myLooper());
     }
+
+
+
 
 
     /*
@@ -229,7 +282,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    // TODO: to be revised
+    // TODO: FOR BACKGROUND
     private boolean checkForGooglePlayService() {
         GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
         int status = googleApiAvailability.isGooglePlayServicesAvailable(this);
@@ -247,6 +300,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(returnIntent);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (fusedLocationProviderClient != null)
+            fusedLocationProviderClient.removeLocationUpdates(thisLocationCallback);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    private void stopLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(thisLocationCallback);
+    }
+
 }
 
-// TODO: Check if the location updates and moves the marker
