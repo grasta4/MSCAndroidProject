@@ -1,8 +1,12 @@
 package com.example.msc;
 
 import android.Manifest;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -19,9 +23,14 @@ import android.view.View;
 import android.widget.Toast;
 
 
+import androidx.annotation.NonNull;
+
+import com.amitshekhar.utils.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
@@ -40,11 +49,16 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import static android.support.v4.app.ServiceCompat.stopForeground;
+import static com.example.msc.BackgroundLocationService.stopForeground;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -52,13 +66,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private LatLng selectedPosition = null;
     private final int locationPermission = 14;
-    private Location currentUserPosition;
-    private LocationRequest mLocationRequest;
-    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationRequest mLocationRequest; // background
     private Marker userMarker;
-    private LocationCallback thisLocationCallback;
+    private LocationManager locationManager;
+    private LocationListener userLocationListener;
 
-    protected ArrayList<Geofence> geofenceArrayList;
+    private GeofencingClient geofencingClient; // geofence
+    private PendingIntent geofencePendingIntent; //geofence
+    private BroadcastReceiver broadcastReceiver;
 
 
     @Override
@@ -70,6 +85,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        broadcastReceiver = new TaskGeofenceBroadcastReceiver();
+        registerReceiver(broadcastReceiver, new IntentFilter());
+
+        stopService(MainActivity.foregroundService);
+
+
+
 
         // TODO: FOR BACKGROUND
         mLocationRequest = new LocationRequest();
@@ -77,41 +99,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setFastestInterval(3000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
-        fusedLocationProviderClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            userMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("testy"));
-                        }
-                    }
-                });
-
-
-        // TODO: FOR BACKGROUND
-        thisLocationCallback = new LocationCallback() {
-
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-                if (locationResult.getLastLocation() == null) {
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
-                    location = locationResult.getLastLocation();
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0f));
-                    if (userMarker == null)
-                        userMarker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker()).position(latLng).title("testy"));
-                    else
-                        AnimateMarker.animateMarkerToGB(userMarker, latLng, new LatLngInterpolator.Spherical());
-                }
-            }
-        };
-
         checkPermission();
+    }
+
+
+    // TODO: Geofences
+    private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
+        builder.addGeofences(TaskLocations.geofenceArrayList);
+        return builder.build();
+    }
+
+    // TODO: geofences (pasted)
+    private PendingIntent getGeofencePendingIntent() {
+        if (geofencePendingIntent != null) {
+            return geofencePendingIntent;
+        }
+        Intent intent = new Intent(this, GeofenceService.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.
+                FLAG_UPDATE_CURRENT);
+        return geofencePendingIntent;
     }
 
 
@@ -119,8 +129,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        startLocationUpdates();
-        geofenceArrayList = new ArrayList<Geofence>();
+
 
         /*
          * This calls the TaskLocations.class which handles all the added tasks.
@@ -133,19 +142,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          * comparably small amount of tasks so that it does not affect performance.
          */
         for (Map.Entry<String, LatLng> entry : TaskLocations.taskLocations.entrySet()) {
-            // locations from TaskLocations are added into a list that handles all the geofences
-            geofenceArrayList.add(new Geofence.Builder()
-                    .setRequestId(entry.getKey())
-                    .setCircularRegion(
-                            entry.getValue().latitude,
-                            entry.getValue().longitude,
-                            TaskLocations.GEOFENCE_RADIUS
-                    )
-                    .setExpirationDuration(TaskLocations.GEOFENCE_EXPIRATION)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
-                            Geofence.GEOFENCE_TRANSITION_EXIT)
-                    .build());
-
             // marker that shows the location
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(entry.getValue().latitude, entry.getValue().longitude))
@@ -158,12 +154,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .radius(200)
                     .strokeColor(Color.parseColor("#2271cce7"))
                     .fillColor(Color.parseColor("#2271cce7")));
+
+
         }
 
         checkPermission();
 
-
-        LocationListener userLocationListener = new LocationListener() {
+        userLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 if (userMarker != null) {
                     userMarker.remove();
@@ -174,6 +171,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
                         new LatLng(location.getLatitude(),
                                 location.getLongitude()), 16.0f));
+                Log.d("myApp", "onLocationChanged: " + location);
+
+
+                if (!TaskLocations.geofenceArrayList.isEmpty()) {
+                    addGeofences(geofencingClient);
+                }
+
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -186,10 +190,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
 
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 10, userLocationListener);
 
         Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -223,32 +225,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-        startLocationUpdates(); // TODO: FOR BACKGROUND
+        // stop foreground service
+
     }
-
-    // TODO: FOR BACKGROUND
-    private void startLocationUpdates() {
-        fusedLocationProviderClient.requestLocationUpdates(mLocationRequest,
-                thisLocationCallback,
-                Looper.getMainLooper());
-    }
-
-
-    // TODO: FOR BACKGROUND
-    private void currentLocationUpdater() {
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        // check for location every 4 sec
-        locationRequest.setInterval(4000);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            checkPermission();
-        }
-
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, thisLocationCallback, Looper.myLooper());
-    }
-
-
-
 
 
     /*
@@ -282,40 +261,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    // TODO: FOR BACKGROUND
-    private boolean checkForGooglePlayService() {
-        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
-        int status = googleApiAvailability.isGooglePlayServicesAvailable(this);
-        if (ConnectionResult.SUCCESS == status)
-            return true;
-        else {
-            if (googleApiAvailability.isUserResolvableError(status))
-                Toast.makeText(this, "Please Install google play services to use this application", Toast.LENGTH_LONG).show();
-        }
-        return false;
-    }
 
     public void returnHome(View v) {
         Intent returnIntent = new Intent(this, MainActivity.class);
         startActivity(returnIntent);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (fusedLocationProviderClient != null)
-            fusedLocationProviderClient.removeLocationUpdates(thisLocationCallback);
-    }
 
     @Override
     protected void onPause() {
         super.onPause();
         stopLocationUpdates();
+        // start foreground service
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     private void stopLocationUpdates() {
-        fusedLocationProviderClient.removeLocationUpdates(thisLocationCallback);
+        locationManager.removeUpdates(userLocationListener);
     }
 
+    private void addGeofences(GeofencingClient geofencingClient) {
+        geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Geofences added
+                        // ...
+                        Log.d("myApp", "onSuccess: ");
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Failed to add geofences
+                        // ...
+                        Log.d("myApp", "onFailure: ");
+                    }
+                });
+    }
 }
-

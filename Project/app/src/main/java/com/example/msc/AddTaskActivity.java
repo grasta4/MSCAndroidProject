@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -175,8 +176,21 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
             addTaskIntent.putExtras(locationBundle);
             Log.d("myApp", taskDescription);
 
+            // stores task location and description
             TaskLocations.taskLocations.put(taskDescription, selectedLocation);
-
+            // declares new geofence
+            TaskLocations.geofenceArrayList.add(new Geofence.Builder()
+                    .setRequestId(taskDescription)
+                    .setCircularRegion(
+                        selectedLocation.latitude,
+                        selectedLocation.longitude,
+                    TaskLocations.GEOFENCE_RADIUS)
+                    .setExpirationDuration(TaskLocations.GEOFENCE_EXPIRATION)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+                                    Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build()
+            );
+            Log.d("myApp", "onClickAddTask: " + TaskLocations.geofenceArrayList);
             startActivity(addTaskIntent);
         }
 
