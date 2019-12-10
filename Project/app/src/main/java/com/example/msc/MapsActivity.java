@@ -25,7 +25,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.amitshekhar.utils.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -116,7 +115,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (geofencePendingIntent != null) {
             return geofencePendingIntent;
         }
-        Intent intent = new Intent(this, GeofenceService.class);
+        Intent intent = new Intent(this, TaskGeofenceBroadcastReceiver.class);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
         // calling addGeofences() and removeGeofences().
         geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.
@@ -174,9 +173,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d("myApp", "onLocationChanged: " + location);
 
 
-                if (!TaskLocations.geofenceArrayList.isEmpty()) {
-                    addGeofences(geofencingClient);
-                }
+                //if (! TaskLocations.geofenceArrayList.isEmpty()) {
+                //    addGeofences(geofencingClient);
+               // }
 
             }
 

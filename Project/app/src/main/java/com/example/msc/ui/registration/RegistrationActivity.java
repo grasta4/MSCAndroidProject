@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -28,38 +29,41 @@ public class RegistrationActivity extends AppCompatActivity {
         final EditText username = findViewById(R.id.username), password = findViewById(R.id.password), confirmPassword = findViewById(R.id.confirm_password), email = findViewById(R.id.email);
         final TextView signIn = findViewById(R.id.sign_in);
 
-        signUp.setOnClickListener(listener -> {
-            final String user = username.getText().toString().trim(), pwd = password.getText().toString().trim(), c_pwd = confirmPassword.getText().toString().trim(), mail = email.getText().toString().trim(), errorMessage = Validator.validateAll(user, pwd, c_pwd, mail);
+        signUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View listener) {
+                final String user = username.getText().toString().trim(), pwd = password.getText().toString().trim(), c_pwd = confirmPassword.getText().toString().trim(), mail = email.getText().toString().trim(), errorMessage = Validator.validateAll(user, pwd, c_pwd, mail);
 
-            if(errorMessage != null) {
-                Toast.makeText(RegistrationActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                if (errorMessage != null) {
+                    Toast.makeText(RegistrationActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
 
-                return;
+                    return;
+                }
+
+                String registrationQuery = "";
+
+                try {
+                    registrationQuery = new BackgroundTask<>(() -> {
+                        final UserDao userDao = MyDatabaseAccessor.getInstance(RegistrationActivity.this.getApplicationContext()).getUserDao();
+                        final User usr = userDao.getUserByUsername(user);
+
+                        if (usr != null && usr.getUsername().equals(user))
+                            return "Username already in use...";
+                        else if (userDao.AddUser(new User(user, pwd, mail, System.currentTimeMillis())) > 0)
+                            return "";
+
+                        return "Error: cannot register...";
+                    }, RegistrationActivity.this.findViewById(R.id.progress_bar), signUp, username, password, confirmPassword, email, signIn).execute().get();
+                } catch (final ExecutionException | InterruptedException exception) {
+                    exception.printStackTrace();
+                }
+
+                if (registrationQuery.isEmpty()) {
+                    Toast.makeText(RegistrationActivity.this, "Registration successful!", Toast.LENGTH_LONG).show();
+                    RegistrationActivity.this.startActivity(moveToLogin);
+                } else
+                    Toast.makeText(RegistrationActivity.this, registrationQuery, Toast.LENGTH_LONG).show();
             }
-
-            String registrationQuery = "";
-
-            try {
-                registrationQuery = new BackgroundTask<>(() -> {
-                    final UserDao userDao = MyDatabaseAccessor.getInstance(getApplicationContext()).getUserDao();
-                    final User usr = userDao.getUserByUsername(user);
-
-                    if(usr != null && usr.getUsername().equals(user))
-                        return  "Username already in use...";
-                    else if(userDao.AddUser(new User(user, pwd, mail, System.currentTimeMillis())) > 0)
-                        return "";
-
-                    return "Error: cannot register...";
-                }, findViewById(R.id.progress_bar), signUp, username, password, confirmPassword, email, signIn).execute().get();
-            } catch (final ExecutionException | InterruptedException exception) {
-                exception.printStackTrace();
-            }
-
-            if(registrationQuery.isEmpty()) {
-                Toast.makeText(RegistrationActivity.this, "Registration successful!", Toast.LENGTH_LONG).show();
-                startActivity(moveToLogin);
-            } else
-                Toast.makeText(RegistrationActivity.this, registrationQuery, Toast.LENGTH_LONG).show();
         });
         signIn.setOnClickListener(listener -> startActivity(moveToLogin));
     }
