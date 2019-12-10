@@ -2,17 +2,12 @@ package com.example.msc;
 
 import android.Manifest;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Build;
 import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -20,25 +15,17 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -50,29 +37,30 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-
-import static android.support.v4.app.ServiceCompat.stopForeground;
-import static com.example.msc.BackgroundLocationService.stopForeground;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private LatLng selectedPosition = null;
+    private LatLng selectedPosition = null; // maybe not necessary
     private final int locationPermission = 14;
+    private final int backgroundPermission = 13;
     private LocationRequest mLocationRequest; // background
     private Marker userMarker;
-    private LocationManager locationManager;
-    private LocationListener userLocationListener;
 
     private GeofencingClient geofencingClient; // geofence
     private PendingIntent geofencePendingIntent; //geofence
     private BroadcastReceiver broadcastReceiver;
+
+  //  boolean permissionAccessCoarseLocationApproved =
+    //        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+      //              == PackageManager.PERMISSION_GRANTED; // permissions
+
+    private FusedLocationProviderClient mFusedLocationClient; // client that enables position updates
+    private Location latestUserLocation; // updated current user location
+    private LocationCallback locationCallback; // location updates
 
 
     @Override
@@ -84,21 +72,115 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //todo: geofences
+
+        geofencingClient = LocationServices.getGeofencingClient(this);
+        if (! TaskLocations.geofenceArrayList.isEmpty()) {
+            addGeofences(geofencingClient);
+        }
+
+        // todo: ask for background permission
+        /*
+        if (permissionAccessCoarseLocationApproved) {
+            boolean backgroundLocationPermissionApproved =
+                    ActivityCompat.checkSelfPermission(this,
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED;
+
+            if (backgroundLocationPermissionApproved) {
+                // App can access location both in the foreground and in the background.
+                // Start your service that doesn't have a foreground service type
+                // defined.
+            } else {
+                // App can only access location in the foreground. Display a dialog
+                // warning the user that your app must have all-the-time access to
+                // location in order to function properly. Then, request background
+                // location.
+                ActivityCompat.requestPermissions(this, new String[] {
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        13);
+            }
+        } else {
+            // App doesn't have access to the device's location at all. Make full request
+            // for permission.
+            ActivityCompat.requestPermissions(this, new String[] {
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    },
+                    14);
+        }
+
+         */
+
+        // for geofencing
         broadcastReceiver = new TaskGeofenceBroadcastReceiver();
         registerReceiver(broadcastReceiver, new IntentFilter());
 
-        stopService(MainActivity.foregroundService);
 
+        // todo: for background
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            latestUserLocation = location;
+                            Log.d("myApp", "onSuccess: fused locationprov" + latestUserLocation.getLatitude());
+                        }
+                    }
+                });
 
 
 
         // TODO: FOR BACKGROUND
+        // mandatory to start location updates
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(3000); // 3 seconds interval
-        mLocationRequest.setFastestInterval(3000);
+        mLocationRequest.setInterval(4000); // 4 seconds interval
+        mLocationRequest.setFastestInterval(4000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        checkPermission();
+
+        // creates a location callback that allows the tracking of the user location
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    if (userMarker != null) {
+                        userMarker.remove();
+                    }
+                    // sets marker to the updated location
+                    userMarker = mMap.addMarker(new MarkerOptions().position(
+                            (new LatLng(location.getLatitude(), location.getLongitude())))
+                            .title("User's Location").icon(BitmapDescriptorFactory.fromResource(R.drawable.obesity)));
+
+                    // animates camera to the updated location
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                            new LatLng(location.getLatitude(),
+                                    location.getLongitude()), 16.0f));
+                    Log.d("myApp", "updatd fused location changed to"+ location.getLatitude());
+
+                    if (! TaskLocations.geofenceArrayList.isEmpty()) {
+                        addGeofences(geofencingClient);
+                    }
+                }
+            };
+        };
+
+
+      //  checkPermission();
+    }
+
+    private void startLocationUpdates() {
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                locationCallback,
+                Looper.getMainLooper());
+    }
+
+    private void stopLocationUpdates() {
+        mFusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
 
@@ -145,7 +227,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(entry.getValue().latitude, entry.getValue().longitude))
                     .title(entry.getKey())
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin)));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin))); // takes custom icon
 
             // circle that visualizes the Geofence
             mMap.addCircle(new CircleOptions()
@@ -157,8 +239,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
 
-        checkPermission();
+      //  checkPermission();
 
+
+        // todo: deprecated location
+        /*
         userLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 if (userMarker != null) {
@@ -189,35 +274,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
+         */
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 10, userLocationListener);
 
-        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        // todo: deprecated location
+        //locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 10, userLocationListener);
+
+        //Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+
+
 
         /*
          * Moves camera to the newly created task if activity is called through intent. If activity
          * is called naturally, camera moves to the user's location.
          */
 
+
+        // todo: maybe remove
         Bundle locationBundle = getIntent().getExtras();
         if (locationBundle != null) {
-
             selectedPosition = getIntent().getExtras().getParcelable("SelectedLocation");
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPosition, 16.0f));
-        } else {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(lastKnownLocation.getLatitude(),
-                            lastKnownLocation.getLongitude()), 16.0f));
         }
-
-        userMarker = mMap.addMarker(new MarkerOptions().position(
-                (new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude())))
-                .title("User's Location"));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(lastKnownLocation.getLatitude(),
-                        lastKnownLocation.getLongitude()), 16.0f));
-
 
     }
 
@@ -225,6 +305,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onResume() {
         super.onResume();
         // stop foreground service
+        startLocationUpdates();
 
     }
 
@@ -285,10 +366,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onDestroy();
     }
 
-    private void stopLocationUpdates() {
-        locationManager.removeUpdates(userLocationListener);
-    }
 
+    // todo: geofences
     private void addGeofences(GeofencingClient geofencingClient) {
         geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                 .addOnSuccessListener(this, new OnSuccessListener<Void>() {

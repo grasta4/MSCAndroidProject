@@ -36,18 +36,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (isMyServiceRunning(BackgroundLocationService.class)) {
-            foregroundService = new Intent(MainActivity.this, BackgroundLocationService.class);
-            stopService(foregroundService);
+        Log.d("myApp", "onCreate: "+BackgroundLocationService.isRunning);
+
+        if (BackgroundLocationService.isRunning) {
+          // foregroundService = new Intent(MainActivity.this, BackgroundLocationService.class);
+          //  foregroundService.setAction(BackgroundLocationService.stopForeground);
+           // stopService(foregroundService);
         } else {
             foregroundService = new Intent(MainActivity.this, BackgroundLocationService.class);
             startForegroundService(foregroundService.setAction(BackgroundLocationService.startForeground));
         }
-
-       // foregroundService = new Intent(this, BackgroundLocationService.class);
-       // foregroundService.setAction(BackgroundLocationService.startForeground);
-       // startForegroundService(foregroundService);
-
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -110,16 +108,6 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
-    }
-
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

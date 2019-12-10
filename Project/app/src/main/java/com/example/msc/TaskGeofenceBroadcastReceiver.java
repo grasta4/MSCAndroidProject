@@ -15,36 +15,26 @@ import java.util.List;
 
 
 public class TaskGeofenceBroadcastReceiver extends BroadcastReceiver {
+    
+    private String TAG = "myApp";
 
 
     @Override
     public void onReceive(Context context, Intent intent) {
 
-       // GeofenceService.enqueueWork(context, intent);
+        
+            GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
 
-        /*
-        GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
+            // Get the transition type.
+            int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
-        int geofenceTransition = geofencingEvent.getGeofenceTransition();
-        Log.d("myApp", "onReceive: geofence");
+            // Test that the reported transition was of interest.
+            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
+                    geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
 
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-            Log.d("myApp", "onReceive: geofence entered");
-
-
-            // sendNotification(geofenceTransitionDetails);
+                Log.d(TAG, "onReceive: monitored transition");
+            }
 
         }
-
-         */
-    }
-
-
-
-
-   // @Override
-    //public void onReceive(Context context, Intent intent) {
-      //  Log.d("myApp", "onReceive: ");
-       // }
-
+    
 }

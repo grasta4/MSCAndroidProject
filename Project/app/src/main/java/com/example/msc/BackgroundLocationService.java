@@ -15,33 +15,43 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import java.util.List;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 
-import static android.arch.lifecycle.Lifecycle.State.RESUMED;
 
 public class BackgroundLocationService extends Service {
 
     public static String stopForeground = "false";
     public static String startForeground = "true";
 
-    private LocationManager locationManager;
-    private LocationListener userLocationListener;
+    private FusedLocationProviderClient mFusedLocationClient; // client that enables position updates
+    private Location latestUserLocation; // updated current user location
+    private LocationCallback locationCallback; // location updates
+    private LocationRequest mLocationRequest; // background
 
     // TODO: implement geofence
+
+    public static boolean isRunning = false;
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent.getAction().equals(startForeground)) {
 
+        if (intent.getAction().equals(startForeground)) {
+            isRunning = true;
             Log.d("myApp", "onStartCommand: invoked");
 
             Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -51,52 +61,53 @@ public class BackgroundLocationService extends Service {
 
 
             // todo: rename
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setContentTitle("My Awesome App")
-                    .setContentText("Doing some work...")
-                    .setContentIntent(pendingIntent).build();
 
-            startForeground(1337, notification);
+            Notification notification =
+                    new Notification.Builder(this, "11")
+                            .setContentTitle("notification title")
+                            .setContentText("notification text")
+                            .setSmallIcon(R.drawable.icon)
+                            .setContentIntent(pendingIntent)
+                            .setTicker(getText(R.string.app_name))
+                            .build();
 
-            userLocationListener = new LocationListener() {
-                public void onLocationChanged(Location location) {
+            startForeground(11, notification);
 
-                    Log.d("myApp", "onLocationChangedSERVICE: " + location);
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+            // TODO: FOR BACKGROUND
+            // mandatory to start location updates
+            mLocationRequest = new LocationRequest();
+            mLocationRequest.setInterval(10000); // 10 seconds interval
+            mLocationRequest.setFastestInterval(10000);
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
 
-                }
-
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-                }
-
-                public void onProviderEnabled(String provider) {
-                }
-
-                public void onProviderDisabled(String provider) {
-                }
+            // creates a location callback that allows the tracking of the user location
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    if (locationResult == null) {
+                        return;
+                    }
+                    for (Location location : locationResult.getLocations()) {
+                        Log.d("myApp", "SERVICELOCATION CHANGED "+location);
+                    }
+                };
             };
 
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                    locationCallback,
+                    Looper.getMainLooper());
 
-            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-            }
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10, userLocationListener);
 
-            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            Log.d("myApp", "onHandleIntent: lastKnownlocation" + lastKnownLocation);
         }
 
         else if (intent.getAction().equals(stopForeground)) {
+            isRunning = false;
             Log.d("myApp", "foreground stopped");
             //your end servce code
-            stopForeground(true);
+            //stopForeground(true);
             stopSelf();
         }
 
@@ -113,6 +124,5 @@ public class BackgroundLocationService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
 
 }
