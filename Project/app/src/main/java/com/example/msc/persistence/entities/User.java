@@ -15,51 +15,56 @@ public class User {
     private String password;
 
     @NonNull
-    private String registered;
-
     private String email;
+
+    @NonNull
+    private long registered;
 
     @Ignore
     public User() {
 
     }
 
-    public User(final String username, final String password, final String registered, final String email) {
+    public User(@NonNull final String username, @NonNull final String password, @NonNull final String email, @NonNull final long registered) {
         this.username = username;
         this.password = password;
+        this.email = email;
         this.registered = registered;
+    }
+
+    @NonNull
+    public String getUsername() {
+        return username.trim();
+    }
+
+    public void setUsername(@NonNull final String username) {
+        this.username = username;
+    }
+
+    @NonNull
+    public String getPassword() {
+        return password.trim();
+    }
+
+    public void setPassword(@NonNull final String password) {
+        this.password = password;
+    }
+
+    @NonNull
+    public String getEmail() {
+        return email.trim();
+    }
+
+    public void setEmail(@NonNull String email) {
         this.email = email;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(final String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(final String password) {
-        this.password = password;
-    }
-
-    public String getRegistered() {
+    @NonNull
+    public long getRegistered() {
         return registered;
     }
 
-    public void setRegistered(final String registered) {
+    public void setRegistered(@NonNull final long registered) {
         this.registered = registered;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(final String email) {
-        this.email = email;
     }
 }

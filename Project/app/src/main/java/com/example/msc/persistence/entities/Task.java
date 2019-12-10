@@ -44,7 +44,7 @@ public class Task {
     }
 
     public String getName() {
-        return name;
+        return name.trim();
     }
 
     public void setName(final String name) {
@@ -52,7 +52,7 @@ public class Task {
     }
 
     public String getLocation() {
-        return location;
+        return location.trim();
     }
 
     public void setLocation(final String location) {
@@ -68,7 +68,7 @@ public class Task {
     }
 
     public String getUser() {
-        return user;
+        return user.trim();
     }
 
     public void setUser(final String user) {

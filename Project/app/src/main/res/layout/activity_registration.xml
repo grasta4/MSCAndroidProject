@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:inputType="text"
+            android:hint="@string/username"/>
+
+        <EditText
+            android:id="@+id/password"
+            android:layout_below="@+id/username"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:inputType="textPassword"
+            android:hint="@string/prompt_password"/>
+
+        <EditText
+            android:id="@+id/confirm_password"
+            android:layout_below="@+id/password"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:inputType="textPassword"
+            android:hint="@string/confirm_password"/>
+
+        <EditText
+            android:id="@+id/email"
+            android:layout_below="@+id/confirm_password"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:inputType="textEmailAddress"
+            android:hint="@string/prompt_email"/>
+
+        <Button
+            android:id="@+id/sign_up"
+            android:layout_below="@+id/email"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:text="@string/action_sign_up"/>
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_below="@id/sign_up"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:text="@string/switch_to_login"/>
+
+        <TextView
+            android:id="@+id/sign_in"
+            android:textColor="@color/design_default_color_primary_dark"
+            android:layout_below="@id/sign_up"
+            android:layout_toRightOf="@id/text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:text="@string/action_sign_in_short"/>
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:layout_below="@id/sign_in"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="@dimen/activity_vertical_margin"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>
