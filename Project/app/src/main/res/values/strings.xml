@@ -20,6 +20,9 @@
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
     <string name="return_button">Return</string>
-
-
+    <string name="username">"Username"</string>
+    <string name="action_sign_up">Sign up</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="switch_to_login">Already registered?</string>
+    <string name="recover_account">Recover account</string>
 </resources>
