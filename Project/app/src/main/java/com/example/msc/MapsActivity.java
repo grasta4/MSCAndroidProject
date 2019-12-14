@@ -2,7 +2,6 @@ package com.example.msc;
 
 import android.Manifest;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -22,8 +21,6 @@ import androidx.annotation.NonNull;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.GeofencingClient;
-import com.google.android.gms.location.GeofencingEvent;
-import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -71,14 +68,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        //todo: geofences
-        geofencingClient = LocationServices.getGeofencingClient(this);
-    //    if (! TaskLocations.geofenceArrayList.isEmpty()) {
-      //      removeGeofences(geofencingClient);
-        //    addGeofences(geofencingClient);
-       // }
-
 
         // todo: for background
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -178,26 +167,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void stopLocationUpdates() {
         mFusedLocationClient.removeLocationUpdates(locationCallback);
     }
-
-
-    // TODO: Geofences
-    private GeofencingRequest getGeofencingRequest() {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);//ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
-      //  builder.addGeofences(TaskLocations.geofenceArrayList);
-        return builder.build();
-    }
-
-    private PendingIntent getGeofencePendingIntent() {
-        if (geofencePendingIntent != null) {
-            return geofencePendingIntent;
-        }
-        Intent geoIntent = new Intent(this, TaskGeofenceBroadcastReceiver.class);
-        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, geoIntent, PendingIntent.
-                FLAG_UPDATE_CURRENT);
-        return geofencePendingIntent;
-    }
-
 
 
     @Override
@@ -309,33 +278,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onDestroy();
     }
 
-
-    // todo: geofences
-    private void addGeofences(GeofencingClient geofencingClient) {
-        geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        // Geofences added
-                        // ...
-                        Log.d("myApp", "onSuccess: ");
-                    }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // Failed to add geofences
-                        // ...
-                        e.printStackTrace();
-                        Log.d("myApp", "onFailure: "+e.getMessage()+"\n");
-                        Log.d("myApp", "onFailure: add geofences doesnt work");
-                    }
-                });
-    }
-
-    public void removeGeofences(GeofencingClient geofencingClient) {
-        geofencingClient.removeGeofences(getGeofencePendingIntent());
-
-    }
 
 }
