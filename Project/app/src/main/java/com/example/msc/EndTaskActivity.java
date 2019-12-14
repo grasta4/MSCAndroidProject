@@ -44,7 +44,6 @@ public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapte
                         String string = RecyclerAdapter.taskLocations.get(positions);
                         // take this string to remove the object from the HashMap (location + description)
                         TaskLocations.taskLocations.remove(string);
-                        TaskLocations.geofenceArrayList.remove(string);
                         // restarts the view to erase the text view (otherwise it would still show the task)
                         recreate();
                     }

@@ -21,6 +21,7 @@ public class TaskLocations {
 
     public static HashMap<String, LatLng> taskLocations = new HashMap<String, LatLng>();
 
-    public static ArrayList<Geofence> geofenceArrayList = new ArrayList<Geofence>();
+   // public static ArrayList<Geofence> geofenceArrayList = new ArrayList<Geofence>();
+
 
 }

@@ -159,6 +159,7 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
             // stores task location and description
             TaskLocations.taskLocations.put(taskDescription, selectedLocation);
             // declares new geofence
+            /*
             TaskLocations.geofenceArrayList.add(new Geofence.Builder()
                     .setRequestId(taskDescription)
                     .setCircularRegion(
@@ -170,7 +171,9 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
                                     Geofence.GEOFENCE_TRANSITION_EXIT)
                     .build()
             );
-            Log.d("myApp", "onClickAddTask: " + TaskLocations.geofenceArrayList);
+
+             */
+          //  Log.d("myApp", "onClickAddTask: " + TaskLocations.geofenceArrayList);
             startActivity(addTaskIntent);
         }
 

@@ -74,10 +74,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //todo: geofences
         geofencingClient = LocationServices.getGeofencingClient(this);
-        if (! TaskLocations.geofenceArrayList.isEmpty()) {
-            removeGeofences(geofencingClient);
-            addGeofences(geofencingClient);
-        }
+    //    if (! TaskLocations.geofenceArrayList.isEmpty()) {
+      //      removeGeofences(geofencingClient);
+        //    addGeofences(geofencingClient);
+       // }
 
 
         // todo: for background
@@ -102,6 +102,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setFastestInterval(4000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+        // THIS WILL ALWAYS BE CALLED WHEN A NEW GEOFENCE IS CREATED SO IT MAY AS WELL STAY IN HERE
         //requests to change the location settings to high accuracy
         LocationSettingsRequest.Builder settingsBuilder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(mLocationRequest);
@@ -160,12 +161,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     location.getLongitude()), 16.0f));
                     Log.d("myApp", "updatd fused location changed to"+ location.getLatitude());
 
-                    if (! TaskLocations.geofenceArrayList.isEmpty()) {
-                        addGeofences(geofencingClient);
-                    }
-                    Log.d("myApp", "onLocationResult: "+TaskLocations.geofenceArrayList);
-
-
                 }
             };
         };
@@ -189,19 +184,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GeofencingRequest getGeofencingRequest() {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
         builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);//ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
-        builder.addGeofences(TaskLocations.geofenceArrayList);
+      //  builder.addGeofences(TaskLocations.geofenceArrayList);
         return builder.build();
     }
 
-    // TODO: geofences (pasted)
     private PendingIntent getGeofencePendingIntent() {
         if (geofencePendingIntent != null) {
             return geofencePendingIntent;
         }
-        Intent intent = new Intent(this, TaskGeofenceBroadcastReceiver.class);
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
-        // calling addGeofences() and removeGeofences().
-        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.
+        Intent geoIntent = new Intent(this, TaskGeofenceBroadcastReceiver.class);
+        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, geoIntent, PendingIntent.
                 FLAG_UPDATE_CURRENT);
         return geofencePendingIntent;
     }
