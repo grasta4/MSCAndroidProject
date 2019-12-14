@@ -1,16 +1,23 @@
 package com.example.msc;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -25,6 +32,7 @@ public class TaskGeofenceBroadcastReceiver extends BroadcastReceiver {
         
             GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
 
+
             // Get the transition type.
             int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
@@ -32,9 +40,19 @@ public class TaskGeofenceBroadcastReceiver extends BroadcastReceiver {
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
                     geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
 
-                Log.d(TAG, "onReceive: monitored transition");
+                List<Geofence> geofenceTransitions = geofencingEvent.getTriggeringGeofences();
+
+                for (Geofence geofence : geofenceTransitions) {
+                    Log.d(TAG, "triggered"+geofence.getRequestId());
+                }
+
+
             }
 
-        }
+    }
+
+
+
+
     
 }

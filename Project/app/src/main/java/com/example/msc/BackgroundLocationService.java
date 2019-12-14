@@ -36,6 +36,7 @@ public class BackgroundLocationService extends Service {
 
     public static String stopForeground = "false";
     public static String startForeground = "true";
+    private final int locationPermission = 14;
 
     private FusedLocationProviderClient mFusedLocationClient; // client that enables position updates
     private Location latestUserLocation; // updated current user location
@@ -49,6 +50,16 @@ public class BackgroundLocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (intent == null) { // fixes the issue that app stops if location permission is revoked after service has been started
+             if ((ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+                isRunning = false;
+                Log.d("myApp", "foreground stopped");
+                stopForeground(true);
+                stopSelf();
+            }
+        } else {
 
         if (intent.getAction().equals(startForeground)) {
             isRunning = true;
@@ -91,6 +102,14 @@ public class BackgroundLocationService extends Service {
                     }
                     for (Location location : locationResult.getLocations()) {
                         Log.d("myApp", "SERVICELOCATION CHANGED "+location);
+
+                        if (intent.getAction().equals(stopForeground) || (ContextCompat.checkSelfPermission(BackgroundLocationService.this,
+                                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+                            isRunning = false;
+                            Log.d("myApp", "foreground stopped");
+                            stopForeground(true);
+                            stopSelf();
+                        }
                     }
                 };
             };
@@ -102,17 +121,18 @@ public class BackgroundLocationService extends Service {
 
         }
 
-        else if (intent.getAction().equals(stopForeground)) {
+        else if (intent.getAction().equals(stopForeground) || (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             isRunning = false;
             Log.d("myApp", "foreground stopped");
-            //your end servce code
-            //stopForeground(true);
+            stopForeground(true);
             stopSelf();
         }
 
         return START_STICKY; //super.onStartCommand(intent, flags, startId);
 
 
+    } return START_STICKY;
     }
 
 
@@ -123,5 +143,6 @@ public class BackgroundLocationService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
 
 }

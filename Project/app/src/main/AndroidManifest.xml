@@ -19,9 +19,6 @@
         <receiver android:name=".TaskGeofenceBroadcastReceiver"
             android:enabled="true"
             android:exported="true"/>
-        <service android:name=".GeofenceService"
-            android:exported="true"
-            android:permission="android.permission.BIND_JOB_SERVICE"/>
         <service android:name=".BackgroundLocationService"/>
         <activity android:name=".EndTaskActivity"></activity>
         <activity android:name=".AddTaskActivity" />

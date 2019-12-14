@@ -52,18 +52,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private LatLng selectedPosition = null; // maybe not necessary
     private final int locationPermission = 14;
-    private final int backgroundPermission = 13;
     private LocationRequest mLocationRequest; // background
     private Marker userMarker;
 
     public GeofencingClient geofencingClient; // geofence
     private PendingIntent geofencePendingIntent; //geofence
-    private BroadcastReceiver broadcastReceiver;
-
-    //todo: ask background location
-  //  boolean permissionAccessCoarseLocationApproved =
-    //        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-      //              == PackageManager.PERMISSION_GRANTED; // permissions
 
     private FusedLocationProviderClient mFusedLocationClient; // client that enables position updates
     private Location latestUserLocation; // updated current user location
@@ -85,40 +78,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             removeGeofences(geofencingClient);
             addGeofences(geofencingClient);
         }
-
-        // todo: ask for background permission
-        /*
-        if (permissionAccessCoarseLocationApproved) {
-            boolean backgroundLocationPermissionApproved =
-                    ActivityCompat.checkSelfPermission(this,
-                            Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED;
-
-            if (backgroundLocationPermissionApproved) {
-                // App can access location both in the foreground and in the background.
-                // Start your service that doesn't have a foreground service type
-                // defined.
-            } else {
-                // App can only access location in the foreground. Display a dialog
-                // warning the user that your app must have all-the-time access to
-                // location in order to function properly. Then, request background
-                // location.
-                ActivityCompat.requestPermissions(this, new String[] {
-                                Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                        13);
-            }
-        } else {
-            // App doesn't have access to the device's location at all. Make full request
-            // for permission.
-            ActivityCompat.requestPermissions(this, new String[] {
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                    },
-                    14);
-        }
-
-         */
-
 
 
         // todo: for background
@@ -229,7 +188,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // TODO: Geofences
     private GeofencingRequest getGeofencingRequest() {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);//ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
         builder.addGeofences(TaskLocations.geofenceArrayList);
         return builder.build();
     }
