@@ -75,7 +75,6 @@ public class BackgroundLocationService extends Service {
 
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-            // TODO: FOR BACKGROUND
             // mandatory to start location updates
             mLocationRequest = new LocationRequest();
             mLocationRequest.setInterval(10000); // 10 seconds interval

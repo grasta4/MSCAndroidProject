@@ -94,27 +94,8 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
         checkPermission();
 
-        LocationListener userLocationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-            }
-
-            public void onProviderDisabled(String provider) {
-            }
-        };
-
+        // this activity does not update the user location. It always takes the last location.
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                1000,
-                10,
-                userLocationListener);
-
         Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
 
@@ -146,7 +127,6 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()), 16.0f));
 
-        locationManager.removeUpdates(userLocationListener);
 
     }
 
@@ -184,7 +164,7 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
                     .setCircularRegion(
                         selectedLocation.latitude,
                         selectedLocation.longitude,
-                    TaskLocations.GEOFENCE_RADIUS)
+                        TaskLocations.GEOFENCE_RADIUS)
                     .setExpirationDuration(TaskLocations.GEOFENCE_EXPIRATION)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
                                     Geofence.GEOFENCE_TRANSITION_EXIT)

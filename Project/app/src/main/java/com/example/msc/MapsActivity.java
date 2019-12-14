@@ -4,7 +4,7 @@ import android.Manifest;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -19,13 +19,18 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingEvent;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -37,6 +42,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.Map;
 
@@ -50,10 +56,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationRequest mLocationRequest; // background
     private Marker userMarker;
 
-    private GeofencingClient geofencingClient; // geofence
+    public GeofencingClient geofencingClient; // geofence
     private PendingIntent geofencePendingIntent; //geofence
     private BroadcastReceiver broadcastReceiver;
 
+    //todo: ask background location
   //  boolean permissionAccessCoarseLocationApproved =
     //        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
       //              == PackageManager.PERMISSION_GRANTED; // permissions
@@ -73,9 +80,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         //todo: geofences
-
         geofencingClient = LocationServices.getGeofencingClient(this);
         if (! TaskLocations.geofenceArrayList.isEmpty()) {
+            removeGeofences(geofencingClient);
             addGeofences(geofencingClient);
         }
 
@@ -112,9 +119,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
          */
 
-        // for geofencing
-        broadcastReceiver = new TaskGeofenceBroadcastReceiver();
-        registerReceiver(broadcastReceiver, new IntentFilter());
 
 
         // todo: for background
@@ -124,7 +128,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onSuccess(Location location) {
                         if (location != null) {
-                            latestUserLocation = location;
+                            latestUserLocation = location; //sets the user location to the last fetched user location
                             Log.d("myApp", "onSuccess: fused locationprov" + latestUserLocation.getLatitude());
                         }
                     }
@@ -134,22 +138,57 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // TODO: FOR BACKGROUND
         // mandatory to start location updates
-        mLocationRequest = new LocationRequest();
+        mLocationRequest = new LocationRequest(); // initiates a location request
         mLocationRequest.setInterval(4000); // 4 seconds interval
         mLocationRequest.setFastestInterval(4000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        //requests to change the location settings to high accuracy
+        LocationSettingsRequest.Builder settingsBuilder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> requestTask = client.checkLocationSettings(settingsBuilder.build());
+
+        requestTask.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                // All location settings are satisfied. The client can initialize
+                // location requests here.
+                // ...
+            }
+        });
+
+        requestTask.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                if (e instanceof ResolvableApiException) {
+                    // Location settings are not satisfied, but this can be fixed
+                    // by showing the user a dialog.
+                    try {
+                        // Show the dialog by calling startResolutionForResult(),
+                        // and check the result in onActivityResult().
+                        ResolvableApiException resolvable = (ResolvableApiException) e;
+                        resolvable.startResolutionForResult(MapsActivity.this,
+                                100);
+                    } catch (IntentSender.SendIntentException sendEx) {
+                        // Ignore the error.
+                    }
+                }
+            }
+        });
 
 
         // creates a location callback that allows the tracking of the user location
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
+                if (locationResult == null) { //stops callback if location cant be fetched
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
                     if (userMarker != null) {
-                        userMarker.remove();
+                        userMarker.remove(); //removes the marker of the previous location
                     }
                     // sets marker to the updated location
                     userMarker = mMap.addMarker(new MarkerOptions().position(
@@ -165,12 +204,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (! TaskLocations.geofenceArrayList.isEmpty()) {
                         addGeofences(geofencingClient);
                     }
+                    Log.d("myApp", "onLocationResult: "+TaskLocations.geofenceArrayList);
+
+
                 }
             };
         };
 
 
-      //  checkPermission();
+        checkPermission();
     }
 
     private void startLocationUpdates() {
@@ -239,73 +281,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
 
-      //  checkPermission();
+        checkPermission();
 
 
-        // todo: deprecated location
-        /*
-        userLocationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                if (userMarker != null) {
-                    userMarker.remove();
-                }
-                userMarker = mMap.addMarker(new MarkerOptions().position(
-                        (new LatLng(location.getLatitude(), location.getLongitude())))
-                        .title("User's Location").icon(BitmapDescriptorFactory.fromResource(R.drawable.obesity)));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(location.getLatitude(),
-                                location.getLongitude()), 16.0f));
-                Log.d("myApp", "onLocationChanged: " + location);
-
-
-                //if (! TaskLocations.geofenceArrayList.isEmpty()) {
-                //    addGeofences(geofencingClient);
-               // }
-
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-            }
-
-            public void onProviderDisabled(String provider) {
-            }
-        };
-
-         */
-
-
-        // todo: deprecated location
-        //locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 10, userLocationListener);
-
-        //Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-
-
-
+        //todo: maybe remove
         /*
          * Moves camera to the newly created task if activity is called through intent. If activity
          * is called naturally, camera moves to the user's location.
          */
-
-
-        // todo: maybe remove
         Bundle locationBundle = getIntent().getExtras();
         if (locationBundle != null) {
             selectedPosition = getIntent().getExtras().getParcelable("SelectedLocation");
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPosition, 16.0f));
         }
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // stop foreground service
-        startLocationUpdates();
 
     }
 
@@ -347,13 +335,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(returnIntent);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startLocationUpdates();
+    }
+
 
     @Override
     protected void onPause() {
         super.onPause();
         stopLocationUpdates();
-        // start foreground service
-
     }
 
     @Override
@@ -383,8 +375,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onFailure(@NonNull Exception e) {
                         // Failed to add geofences
                         // ...
-                        Log.d("myApp", "onFailure: ");
+                        e.printStackTrace();
+                        Log.d("myApp", "onFailure: "+e.getMessage()+"\n");
+                        Log.d("myApp", "onFailure: add geofences doesnt work");
                     }
                 });
     }
+
+    public void removeGeofences(GeofencingClient geofencingClient) {
+        geofencingClient.removeGeofences(getGeofencePendingIntent());
+
+    }
+
 }
