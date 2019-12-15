@@ -16,6 +16,7 @@ import com.example.msc.R;
 import com.example.msc.ui.login.LoginActivity;
 import com.example.msc.ui.util.Validator;
 import com.example.msc.util.BackgroundTask;
+import com.example.msc.util.Encryptor;
 import java.util.concurrent.ExecutionException;
 
 public class RegistrationActivity extends AppCompatActivity {
@@ -49,7 +50,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
                         if (usr != null && usr.getUsername().equals(user))
                             return "Username already in use...";
-                        else if (userDao.AddUser(new User(user, pwd, mail, System.currentTimeMillis())) > 0)
+                        else if (userDao.AddUser(new User(user, Encryptor.encrypt(pwd), mail, System.currentTimeMillis())) > 0)
                             return "";
 
                         return "Error: cannot register...";

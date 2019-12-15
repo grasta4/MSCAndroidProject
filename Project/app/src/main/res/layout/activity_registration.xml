@@ -11,6 +11,7 @@
 
         <EditText
             android:id="@+id/username"
+            android:gravity="center"
             android:layout_centerHorizontal="true"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
@@ -19,6 +20,7 @@
 
         <EditText
             android:id="@+id/password"
+            android:gravity="center"
             android:layout_below="@+id/username"
             android:layout_centerHorizontal="true"
             android:layout_height="wrap_content"
@@ -29,6 +31,7 @@
 
         <EditText
             android:id="@+id/confirm_password"
+            android:gravity="center"
             android:layout_below="@+id/password"
             android:layout_centerHorizontal="true"
             android:layout_height="wrap_content"
@@ -39,6 +42,7 @@
 
         <EditText
             android:id="@+id/email"
+            android:gravity="center"
             android:layout_below="@+id/confirm_password"
             android:layout_centerHorizontal="true"
             android:layout_height="wrap_content"
