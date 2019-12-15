@@ -9,8 +9,10 @@ import android.graphics.Color;
 import android.location.Location;
 import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
@@ -52,8 +54,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationRequest mLocationRequest; // background
     private Marker userMarker;
 
-    public GeofencingClient geofencingClient; // geofence
-    private PendingIntent geofencePendingIntent; //geofence
+    public static boolean isRunning;
 
     private FusedLocationProviderClient mFusedLocationClient; // client that enables position updates
     private Location latestUserLocation; // updated current user location
@@ -69,6 +70,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        isRunning = true;
+
         // todo: for background
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mFusedLocationClient.getLastLocation()
@@ -77,7 +80,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onSuccess(Location location) {
                         if (location != null) {
                             latestUserLocation = location; //sets the user location to the last fetched user location
-                            Log.d("myApp", "onSuccess: fused locationprov" + latestUserLocation.getLatitude());
                         }
                     }
                 });
@@ -184,6 +186,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          * optimal, I decided to implement it like this because I expect there only to be a
          * comparably small amount of tasks so that it does not affect performance.
          */
+
         for (Map.Entry<String, LatLng> entry : TaskLocations.taskLocations.entrySet()) {
             // marker that shows the location
             mMap.addMarker(new MarkerOptions()
@@ -200,6 +203,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         }
+
 
         checkPermission();
 
@@ -259,6 +263,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onResume() {
         super.onResume();
         startLocationUpdates();
+        isRunning = true;
     }
 
 
@@ -271,6 +276,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onStop() {
         super.onStop();
+        isRunning=false;
     }
 
     @Override

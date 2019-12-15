@@ -218,7 +218,6 @@ public class BackgroundLocationService extends Service {
 
     private void addGeofences(GeofencingClient geofencingClient) {
         geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent());
-
     }
 
     public void removeGeofences(GeofencingClient geofencingClient) {

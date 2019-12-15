@@ -12,7 +12,8 @@ public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapte
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerView activeTasksView;
     private RecyclerView.Adapter recyclerAdapter;
-    private RecyclerAdapter.OnTaskListener onTaskListener;
+
+    public static boolean isRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +27,8 @@ public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapte
 
         recyclerAdapter = new RecyclerAdapter(TaskLocations.taskLocations, this);
         activeTasksView.setAdapter(recyclerAdapter);
+
+        isRunning = true;
     }
 
     @Override
@@ -44,6 +47,7 @@ public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapte
                         String string = RecyclerAdapter.taskLocations.get(positions);
                         // take this string to remove the object from the HashMap (location + description)
                         TaskLocations.taskLocations.remove(string);
+                        TaskLocations.locationID.remove(string);
                         // restarts the view to erase the text view (otherwise it would still show the task)
                         recreate();
                     }
@@ -55,5 +59,17 @@ public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapte
                 });
         AlertDialog alertdialog = alertBuilder.create();
         alertdialog.show();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isRunning = false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isRunning = true;
     }
 }
