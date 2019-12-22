@@ -99,7 +99,7 @@ public class BackgroundLocationService extends Service {
                     new Notification.Builder(this, "38")
                             .setContentTitle("Background Location")
                             .setContentText("MSC uses background location.")
-                            .setSmallIcon(R.drawable.icon)
+                            .setSmallIcon(R.drawable.clipboard)
                             .setContentIntent(pendingIntent)
                             .setTicker(getText(R.string.app_name))
                             .build();

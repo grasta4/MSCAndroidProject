@@ -1,11 +1,13 @@
 package com.example.msc;
 
 import android.support.annotation.NonNull;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -30,12 +32,18 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.TaskVi
 
     public static class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener  {
 
+        public CardView cardView; // wraps the text views inside
         public TextView taskTextView; // text view that displays the task descriptions
+        public TextView infoText;
+        public ImageView taskIcon;
         OnTaskListener onTaskListener;
 
-        public TaskViewHolder(TextView v, OnTaskListener onTaskListener) {
+        public TaskViewHolder(View v, OnTaskListener onTaskListener) {
             super(v);
-            taskTextView = v;
+            cardView = v.findViewById(R.id.card_view);
+            taskTextView = v.findViewById(R.id.task_description);
+            infoText = v.findViewById(R.id.info_text);
+            taskIcon = v.findViewById(R.id.task_icon);
             this.onTaskListener = onTaskListener;
 
             v.setOnClickListener(this);
@@ -55,10 +63,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.TaskVi
     @Override
     public RecyclerAdapter.TaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
 
-        // textview template fetched from endtask_textview.xml
-        // open endtask_textview.xml to change font size etc.
-        TextView v = (TextView) LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.endtask_textview, viewGroup, false);
+        // cardview template fetched from endtask_cardview.xml
+        // open endtask_cardview.xml to change font size etc.
+        View v = LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.endtask_cardview, viewGroup, false);
 
         RecyclerAdapter.TaskViewHolder viewHolder = new TaskViewHolder(v, mOnTaskListener);
         return viewHolder;
@@ -67,6 +75,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.TaskVi
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder viewHolder, int i) {
         viewHolder.taskTextView.setText(taskLocations.get(i)); // sets the descriptions to the text view
+        viewHolder.infoText.setText("Tap to remove.");
+        viewHolder.taskIcon.setImageResource(R.drawable.clipboard);
     }
 
     @Override
@@ -77,5 +87,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.TaskVi
     // interface that enables the connection to EndTaskActivity.java to call the onClick functions
     public interface OnTaskListener {
         void onTaskClick(int position);
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
     }
 }

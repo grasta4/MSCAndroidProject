@@ -82,13 +82,13 @@ public class TaskGeofenceBroadcastReceiver extends BroadcastReceiver {
 
         notificationBuilder.setContentTitle("Task Location Entered!" )
                 .setContentText("You are near " + geofence.getRequestId())
-                .setSmallIcon(R.drawable.julius)
+                .setSmallIcon(R.drawable.clipboard)
                 .setChannelId(channel)
                 .setContentIntent(pendingIntent)
                 .setOnlyAlertOnce(true)
                 .setAutoCancel(true)
                 .setGroup(group)
-                .addAction(R.drawable.julius, "End Task", deleteIntent)
+                .addAction(R.drawable.clipboard, "End Task", deleteIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         notificationManagerCompat.notify(id, notificationBuilder.build());
@@ -100,7 +100,7 @@ public class TaskGeofenceBroadcastReceiver extends BroadcastReceiver {
                         .setContentTitle("Multiple Task Locations entered.")
                         //set content text to support devices running API level < 24
                         .setContentText("")
-                        .setSmallIcon(R.drawable.julius)
+                        .setSmallIcon(R.drawable.clipboard)
                         //build summary info into InboxStyle template
                         .setStyle(new NotificationCompat.InboxStyle()
                                 .setSummaryText("Multiple Task Locations nearby."))

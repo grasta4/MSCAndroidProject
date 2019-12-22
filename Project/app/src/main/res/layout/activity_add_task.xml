@@ -6,31 +6,79 @@
     android:layout_height="match_parent"
     tools:context=".AddTaskActivity">
 
-    <Button
-        android:id="@+id/bAddTask"
-        android:layout_width="0dp"
-        android:layout_height="75dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginRight="50dp"
-        android:onClick="onClickAddTask"
-        android:text="@string/add_task"
-        app:layout_constraintEnd_toEndOf="parent"
+    <LinearLayout
+        android:id="@+id/addtasklayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/addtaskinfo"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="28dp"
+        android:layout_marginRight="200dp"
+        android:elevation="0dp"
+        android:gravity="start"
+        android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/eTinsertTask" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Task"
+            android:textColor="#0E1843"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter a task description, move the marker to the desired location and press the + button."
+            android:textColor="#0E1843"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/addtaskhome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+       >
+
 
     <EditText
         android:id="@+id/eTinsertTask"
         android:layout_width="wrap_content"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/insert_task"
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginBottom="4dp"
+                android:clickable="true"
+                android:onClick="onClickAddTask"
+                android:gravity="center"
+                android:src="@drawable/roundaddbutton" />
+
+
+
+    </LinearLayout>
+
+    </LinearLayout>
+
 
     <fragment
         android:id="@+id/map"
@@ -41,7 +89,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bAddTask"
+        app:layout_constraintTop_toBottomOf="@+id/addtasklayout"
         tools:context="com.example.currentplacedetailsonmap.MapsActivityCurrentPlace" />
+
 
 </android.support.constraint.ConstraintLayout>

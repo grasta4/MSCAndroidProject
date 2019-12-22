@@ -144,7 +144,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // sets marker to the updated location
                     userMarker = mMap.addMarker(new MarkerOptions().position(
                             (new LatLng(location.getLatitude(), location.getLongitude())))
-                            .title("User's Location").icon(BitmapDescriptorFactory.fromResource(R.drawable.julius)));
+                            .title("User's Location").icon(BitmapDescriptorFactory.fromResource(R.drawable.position)));
 
                     // animates camera to the updated location
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(

@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MapsActivity">
+
 
     <fragment
         android:id="@+id/map"
@@ -15,17 +16,21 @@
         app:layout_constraintBottom_toBottomOf="parent"
         tools:context=".MapsActivity" />
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dashboard"
+        android:gravity="center"
+        android:textColor="#0E1843"
+        android:textSize="24sp"
+        android:clickable="true"
         android:onClick="returnHome"
-        android:text="@string/return_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/map" />
+        app:layout_constraintTop_toBottomOf="@+id/map"/>
 
 
 </android.support.constraint.ConstraintLayout>
