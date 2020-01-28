@@ -64,8 +64,6 @@ public class BackgroundLocationService extends Service {
     private PendingIntent geofencePendingIntent;
     public static ArrayList<Geofence> geofenceArrayList = new ArrayList<Geofence>();
 
-    // TODO: implement geofence
-
     public static boolean isRunning = false;
 
 
@@ -85,8 +83,6 @@ public class BackgroundLocationService extends Service {
         if (intent.getAction().equals(startForeground)) {
             isRunning = true;
             Log.d("myApp", "onStartCommand: invoked");
-
-
             Log.d("myApp", ""+geofenceArrayList);
 
             Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -111,19 +107,17 @@ public class BackgroundLocationService extends Service {
             if (!geofenceArrayList.isEmpty()) {
                 geofenceArrayList = new ArrayList<Geofence>();
                 populateGeofenceList();
-                removeGeofences(geofencingClient);
+                //removeGeofences(geofencingClient);
                 addGeofences(geofencingClient);
                 Log.d("myApp", ""+geofenceArrayList);
                 Log.d("myApp", ""+TaskLocations.taskLocations);
             } else if (!(TaskLocations.taskLocations.size()==0)) {
                 populateGeofenceList();
-                removeGeofences(geofencingClient);
+                //removeGeofences(geofencingClient);
                 addGeofences(geofencingClient);
                 Log.d("myApp", ""+geofenceArrayList);
                 Log.d("myApp", ""+TaskLocations.taskLocations);
             }
-
-
 
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -132,8 +126,6 @@ public class BackgroundLocationService extends Service {
             mLocationRequest.setInterval(10000); // 10 seconds interval
             mLocationRequest.setFastestInterval(10000);
             mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-
 
             // creates a location callback that allows the tracking of the user location
             locationCallback = new LocationCallback() {
@@ -149,7 +141,7 @@ public class BackgroundLocationService extends Service {
                             geofenceArrayList = new ArrayList<Geofence>();
                             if (!(TaskLocations.taskLocations.size()==0)){
                             populateGeofenceList();
-                            removeGeofences(geofencingClient);
+                            //removeGeofences(geofencingClient);
                             addGeofences(geofencingClient);
                             Log.d("myApp", ""+geofenceArrayList);
                             Log.d("myApp", ""+TaskLocations.taskLocations);}
@@ -159,7 +151,7 @@ public class BackgroundLocationService extends Service {
                             return;
                         } else {
                             populateGeofenceList();
-                            removeGeofences(geofencingClient);
+                            //removeGeofences(geofencingClient);
                             addGeofences(geofencingClient);
                             Log.d("myApp", ""+geofenceArrayList);
                             Log.d("myApp", ""+TaskLocations.taskLocations);
@@ -174,7 +166,6 @@ public class BackgroundLocationService extends Service {
                     locationCallback,
                     Looper.getMainLooper());
 
-
         }
 
         else if (intent.getAction().equals(stopForeground) || (ContextCompat.checkSelfPermission(this,
@@ -185,7 +176,7 @@ public class BackgroundLocationService extends Service {
             stopSelf();
         }
 
-        return START_STICKY; //super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
 
         } return START_STICKY;
     }
@@ -198,10 +189,9 @@ public class BackgroundLocationService extends Service {
         return null;
     }
 
-    // TODO: Geofences
     private GeofencingRequest getGeofencingRequest() {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);//ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
         builder.addGeofences(geofenceArrayList);
         return builder.build();
     }
@@ -218,6 +208,7 @@ public class BackgroundLocationService extends Service {
 
     private void addGeofences(GeofencingClient geofencingClient) {
         geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent());
+
     }
 
     public void removeGeofences(GeofencingClient geofencingClient) {

@@ -166,7 +166,6 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
             createNotificationChannel(taskDescription);
 
-
         }
 
     }
@@ -188,5 +187,3 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
     }
 
 }
-
-//TODO: Kill activity after onClick
