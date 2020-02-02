@@ -15,7 +15,20 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import com.example.msc.persistence.MyDatabaseAccessor;
+import com.example.msc.persistence.dao.TaskDao;
+import com.example.msc.persistence.entities.Task;
+import com.example.msc.ui.login.LoginActivity;
+import com.example.msc.ui.settings.SettingsActivity;
+import com.example.msc.util.BackgroundTask;
+import com.facebook.login.LoginManager;
 import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -28,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         Log.d("myApp", "onCreate: "+BackgroundLocationService.isRunning);
 
@@ -42,6 +56,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         checkPermission();
+
+        try {
+            new BackgroundTask<Void>(() -> {
+                final TaskDao taskDao = MyDatabaseAccessor.getInstance(this.getApplicationContext()).getTaskDao();
+
+                final List<Task> taskList = taskDao.getTasksByUser(SettingsActivity.U_NAME);
+
+                for (Task task : taskList) {
+                    TaskLocations.taskLocations.put(task.getName(), new LatLng(task.getLatitude(), task.getLongitude()));
+                }
+
+                return null;
+
+            }).execute().get();
+        } catch (final ExecutionException | InterruptedException exception) {
+            exception.printStackTrace();
+        }
 
 
     }
@@ -60,6 +91,13 @@ public class MainActivity extends AppCompatActivity {
     public void endTask(View v) {
         Intent endTaskIntent = new Intent(this, EndTaskActivity.class);
         startActivity(endTaskIntent);
+    }
+
+    public void logout(View v) {
+        TaskLocations.taskLocations = new HashMap<String, LatLng>();
+        Intent logoutIntent = new Intent(this, LoginActivity.class);
+        LoginManager.getInstance().logOut();
+        startActivity(logoutIntent);
     }
 
     @Override
@@ -124,6 +162,11 @@ public class MainActivity extends AppCompatActivity {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
+    }
+
+    public void settings(View v) {
+        Intent settingsIntent = new Intent(this, SettingsActivity.class);
+        startActivity(settingsIntent);
     }
 
 }

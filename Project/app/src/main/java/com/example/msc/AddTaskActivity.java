@@ -20,7 +20,12 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
+import com.example.msc.persistence.MyDatabaseAccessor;
+import com.example.msc.persistence.dao.TaskDao;
+import com.example.msc.ui.settings.SettingsActivity;
+import com.example.msc.util.BackgroundTask;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -29,8 +34,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.example.msc.persistence.entities.Task;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 
 public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -166,7 +173,30 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
 
             createNotificationChannel(taskDescription);
 
+            String addtaskQuery = "";
+
+            try {
+                addtaskQuery = new BackgroundTask<>(() -> {
+                    final TaskDao taskDao = MyDatabaseAccessor.getInstance(this.getApplicationContext()).getTaskDao();
+
+                    final Task task = taskDao.getTaskByName(taskDescription);
+                    if (task != null) {
+                        return "Task already created";
+                    }
+
+                    taskDao.AddTask(new Task(taskDescription, selectedLocation.latitude, selectedLocation.longitude, SettingsActivity.U_NAME));
+                    return "Task added";
+
+
+                }).execute().get();
+            } catch (final ExecutionException | InterruptedException exception) {
+                exception.printStackTrace();
+            }
+
+            Toast.makeText(this, addtaskQuery, Toast.LENGTH_LONG).show();
+
         }
+        finish();
 
     }
 

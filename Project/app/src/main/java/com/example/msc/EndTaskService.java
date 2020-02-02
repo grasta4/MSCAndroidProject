@@ -2,11 +2,15 @@ package com.example.msc;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+
+import com.example.msc.persistence.MyDatabaseAccessor;
+import com.example.msc.persistence.dao.TaskDao;
+import com.example.msc.util.BackgroundTask;
+
+import java.util.concurrent.ExecutionException;
 
 public class EndTaskService extends IntentService {
 
@@ -21,6 +25,18 @@ public class EndTaskService extends IntentService {
         TaskLocations.taskLocations.remove(removeItem);
         TaskLocations.locationID.remove(removeItem);
         Log.d("myApp", "onHandleIntent: deleted" );
+
+        try {
+            new BackgroundTask<Void>(() -> {
+                final TaskDao taskDao = MyDatabaseAccessor.getInstance(this.getApplicationContext()).getTaskDao();
+
+                taskDao.deleteByName(removeItem);
+                return null;
+
+            }).execute().get();
+        } catch (final ExecutionException | InterruptedException exception) {
+            exception.printStackTrace();
+        }
 
         if (MapsActivity.isRunning) {
             Intent intents = new Intent(this, MapsActivity.class);

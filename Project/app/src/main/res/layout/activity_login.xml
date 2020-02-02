@@ -18,7 +18,7 @@
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="@string/prompt_email"
+            android:hint="@string/username"
             android:inputType="textEmailAddress"
             android:selectAllOnFocus="true" />
 
@@ -43,8 +43,36 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:enabled="false"
+            android:enabled="true"
             android:text="@string/action_sign_in_short" />
+
+        <Button
+            android:id="@+id/register"
+            android:layout_below="@+id/login"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:enabled="true"
+            android:text="@string/action_sign_up" />
+
+        <TextView
+            android:id="@+id/forgot_pwd"
+            android:layout_centerHorizontal="true"
+            android:textColor="@color/design_default_color_primary_dark"
+            android:layout_below="@id/register"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:text="@string/forgot_password"/>
+
+        <com.facebook.login.widget.LoginButton
+            android:id="@+id/login_button"
+            android:layout_below="@id/forgot_pwd"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin" />
 
         <ProgressBar
             android:id="@+id/loading"

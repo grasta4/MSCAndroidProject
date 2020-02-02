@@ -5,19 +5,17 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "task")
+@Entity(tableName = "task", primaryKeys = {"name", "user"})
 public class Task {
-    @PrimaryKey(autoGenerate = true)
-    private int id;
 
     @NonNull
     private String name;
 
     @NonNull
-    private String location;
+    private double latitude;
 
     @NonNull
-    private long timestamp;
+    private double longitude;
 
     @NonNull
     private String user;
@@ -27,20 +25,11 @@ public class Task {
 
     }
 
-    public Task(final int id, final String name, final String location, final long timestamp, final String user) {
-        this.id = id;
+    public Task(final String name, final double latitude, final double longitude, final String user) {
         this.name = name;
-        this.location = location;
-        this.timestamp = timestamp;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.user = user;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(final int id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -51,21 +40,13 @@ public class Task {
         this.name = name;
     }
 
-    public String getLocation() {
-        return location.trim();
-    }
+    public double getLatitude() {return latitude;}
 
-    public void setLocation(final String location) {
-        this.location = location;
-    }
+    public void setLatitude(final double latitude) {this.latitude = latitude;}
 
-    public long getTimestamp() {
-        return timestamp;
-    }
+    public double getLongitude() {return longitude;}
 
-    public void setTimestamp(final long timestamp) {
-        this.timestamp = timestamp;
-    }
+    public void setLongitude(final double longitude) {this.longitude = longitude;}
 
     public String getUser() {
         return user.trim();

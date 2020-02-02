@@ -1,127 +1,103 @@
 package com.example.msc.ui.login;
 
-import android.app.Activity;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
+import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.example.msc.MainActivity;
 import com.example.msc.R;
-import com.example.msc.ui.login.LoginViewModel;
-import com.example.msc.ui.login.LoginViewModelFactory;
+import com.example.msc.persistence.MyDatabaseAccessor;
+import com.example.msc.persistence.entities.User;
+import com.example.msc.ui.recovery.AccountRecoveryActivity;
+import com.example.msc.ui.registration.RegistrationActivity;
+import com.example.msc.ui.settings.SettingsActivity;
+import com.example.msc.util.BackgroundTask;
+import com.example.msc.util.Encryptor;
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+import java.util.concurrent.ExecutionException;
 
 public class LoginActivity extends AppCompatActivity {
-
-    private LoginViewModel loginViewModel;
+    private CallbackManager callbackManager = CallbackManager.Factory.create();
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory())
-                .get(LoginViewModel.class);
 
-        final EditText usernameEditText = findViewById(R.id.username);
-        final EditText passwordEditText = findViewById(R.id.password);
-        final Button loginButton = findViewById(R.id.login);
-        final ProgressBar loadingProgressBar = findViewById(R.id.loading);
+        final Button login = findViewById(R.id.login), register = findViewById(R.id.register);
+        final EditText username = findViewById(R.id.username), password = findViewById(R.id.password);
+        final LoginButton FBLoginButton = findViewById(R.id.login_button);
+        final AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        final TextView credentialRecovery = findViewById(R.id.forgot_pwd);
 
-        loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
+        credentialRecovery.setOnClickListener(listener -> startActivity(new Intent(this, AccountRecoveryActivity.class)));
+
+        login.setOnClickListener(view -> {
+            final String user = username.getText().toString().trim(), pwd = password.getText().toString().trim();
+
+            if (user.isEmpty() || pwd.isEmpty()) {
+                Toast.makeText(this, "Fill form...", Toast.LENGTH_LONG).show();
+
+                return;
+            }
+
+            String loginQuery = "";
+
+            try {
+                loginQuery = new BackgroundTask<>(() -> {
+                    final User usr = MyDatabaseAccessor.getInstance(this.getApplicationContext()).getUserDao().getUserByUsername(user);
+
+                    return usr != null && user.equals(usr.getUsername()) && pwd.equals(Encryptor.decrypt(usr.getPassword())) ? user : "";
+                }, this.findViewById(R.id.loading), login, register, username, password).execute().get();
+            } catch (final ExecutionException | InterruptedException exception) {
+                exception.printStackTrace();
+            }
+
+            if (loginQuery.isEmpty())
+                Toast.makeText(this, "LoginFailed", Toast.LENGTH_LONG).show();
+            else {
+                SettingsActivity.U_NAME = loginQuery;
+                SettingsActivity.APP_LOGIN = true;
+                Toast.makeText(this, "Welcome: " + loginQuery, Toast.LENGTH_LONG).show();
+                startActivity(new Intent(this, MainActivity.class));
+            }
+        });
+        register.setOnClickListener(listener -> startActivity(new Intent(this, RegistrationActivity .class)));
+        FBLoginButton.setReadPermissions("email");
+        FBLoginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
-            public void onChanged(@Nullable LoginFormState loginFormState) {
-                if (loginFormState == null) {
-                    return;
-                }
-                loginButton.setEnabled(loginFormState.isDataValid());
-                if (loginFormState.getUsernameError() != null) {
-                    usernameEditText.setError(getString(loginFormState.getUsernameError()));
-                }
-                if (loginFormState.getPasswordError() != null) {
-                    passwordEditText.setError(getString(loginFormState.getPasswordError()));
-                }
+            public void onSuccess(com.facebook.login.LoginResult loginResult) {
+                SettingsActivity.U_NAME = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this)
+                        .getString("fb_name", "Unknown");
+
+                SettingsActivity.APP_LOGIN = false;
+                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+                System.out.println(error);
+                Log.d("myApp", "onError: " + error.getMessage() + error.getStackTrace() + error.getCause());
             }
         });
 
-        loginViewModel.getLoginResult().observe(this, new Observer<LoginResult>() {
-            @Override
-            public void onChanged(@Nullable LoginResult loginResult) {
-                if (loginResult == null) {
-                    return;
-                }
-                loadingProgressBar.setVisibility(View.GONE);
-                if (loginResult.getError() != null) {
-                    showLoginFailed(loginResult.getError());
-                }
-                if (loginResult.getSuccess() != null) {
-                    updateUiWithUser(loginResult.getSuccess());
-                }
-                setResult(Activity.RESULT_OK);
-
-                //Complete and destroy login activity once successful
-                finish();
-            }
-        });
-
-        TextWatcher afterTextChangedListener = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // ignore
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // ignore
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                loginViewModel.loginDataChanged(usernameEditText.getText().toString(),
-                        passwordEditText.getText().toString());
-            }
-        };
-        usernameEditText.addTextChangedListener(afterTextChangedListener);
-        passwordEditText.addTextChangedListener(afterTextChangedListener);
-        passwordEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    loginViewModel.login(usernameEditText.getText().toString(),
-                            passwordEditText.getText().toString());
-                }
-                return false;
-            }
-        });
-
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadingProgressBar.setVisibility(View.VISIBLE);
-                loginViewModel.login(usernameEditText.getText().toString(),
-                        passwordEditText.getText().toString());
-            }
-        });
-    }
-
-    private void updateUiWithUser(LoggedInUserView model) {
-        String welcome = getString(R.string.welcome) + model.getDisplayName();
-        // TODO : initiate successful logged in experience
-        Toast.makeText(getApplicationContext(), welcome, Toast.LENGTH_LONG).show();
-    }
-
-    private void showLoginFailed(@StringRes Integer errorString) {
-        Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_SHORT).show();
+        if(accessToken != null && !accessToken.isExpired())
+            startActivity(new Intent(this, MainActivity.class));
     }
 }

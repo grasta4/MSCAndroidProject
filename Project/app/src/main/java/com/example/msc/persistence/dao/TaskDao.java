@@ -21,4 +21,10 @@ public interface TaskDao {
 
     @Query("select * from task where task.user ==:user")
     public List <Task> getTasksByUser(final String user);
+
+    @Query("select * from task where task.name==:name")
+    public Task getTaskByName(final String name);
+
+    @Query("DELETE FROM task WHERE name== :name")
+    public int deleteByName(final String name);
 }

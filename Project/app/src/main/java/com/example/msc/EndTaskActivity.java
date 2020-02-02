@@ -7,6 +7,14 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.example.msc.persistence.MyDatabaseAccessor;
+import com.example.msc.persistence.dao.TaskDao;
+import com.example.msc.persistence.entities.Task;
+import com.example.msc.ui.settings.SettingsActivity;
+import com.example.msc.util.BackgroundTask;
+
+import java.util.concurrent.ExecutionException;
+
 public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapter.OnTaskListener {
 
     private RecyclerView.LayoutManager layoutManager;
@@ -48,6 +56,19 @@ public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapte
                         // take this string to remove the object from the HashMap (location + description)
                         TaskLocations.taskLocations.remove(string);
                         TaskLocations.locationID.remove(string);
+
+                        // take string to remove task from database
+                        try {
+                            new BackgroundTask<Void>(() -> {
+                                final TaskDao taskDao = MyDatabaseAccessor.getInstance(EndTaskActivity.this.getApplicationContext()).getTaskDao();
+
+                                taskDao.deleteByName(string);
+                                return null;
+
+                            }).execute().get();
+                        } catch (final ExecutionException | InterruptedException exception) {
+                            exception.printStackTrace();
+                        }
                         // restarts the view to erase the text view (otherwise it would still show the task)
                         recreate();
                     }

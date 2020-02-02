@@ -107,13 +107,13 @@ public class BackgroundLocationService extends Service {
             if (!geofenceArrayList.isEmpty()) {
                 geofenceArrayList = new ArrayList<Geofence>();
                 populateGeofenceList();
-                //removeGeofences(geofencingClient);
+                removeGeofences(geofencingClient);
                 addGeofences(geofencingClient);
                 Log.d("myApp", ""+geofenceArrayList);
                 Log.d("myApp", ""+TaskLocations.taskLocations);
             } else if (!(TaskLocations.taskLocations.size()==0)) {
                 populateGeofenceList();
-                //removeGeofences(geofencingClient);
+                removeGeofences(geofencingClient);
                 addGeofences(geofencingClient);
                 Log.d("myApp", ""+geofenceArrayList);
                 Log.d("myApp", ""+TaskLocations.taskLocations);
@@ -141,7 +141,7 @@ public class BackgroundLocationService extends Service {
                             geofenceArrayList = new ArrayList<Geofence>();
                             if (!(TaskLocations.taskLocations.size()==0)){
                             populateGeofenceList();
-                            //removeGeofences(geofencingClient);
+                            removeGeofences(geofencingClient);
                             addGeofences(geofencingClient);
                             Log.d("myApp", ""+geofenceArrayList);
                             Log.d("myApp", ""+TaskLocations.taskLocations);}
@@ -151,7 +151,7 @@ public class BackgroundLocationService extends Service {
                             return;
                         } else {
                             populateGeofenceList();
-                            //removeGeofences(geofencingClient);
+                            removeGeofences(geofencingClient);
                             addGeofences(geofencingClient);
                             Log.d("myApp", ""+geofenceArrayList);
                             Log.d("myApp", ""+TaskLocations.taskLocations);
@@ -213,7 +213,6 @@ public class BackgroundLocationService extends Service {
 
     public void removeGeofences(GeofencingClient geofencingClient) {
         geofencingClient.removeGeofences(getGeofencePendingIntent());
-
     }
 
     public void populateGeofenceList() {
