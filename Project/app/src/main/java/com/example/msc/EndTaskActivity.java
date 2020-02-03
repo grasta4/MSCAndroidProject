@@ -1,5 +1,6 @@
 package com.example.msc;
 
+import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -49,11 +50,13 @@ public class EndTaskActivity extends AppCompatActivity implements RecyclerAdapte
                 .setPositiveButton("YES", new DialogInterface.OnClickListener() {
 
                     public void onClick(DialogInterface dialog, int id) {
+                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                         // get the task description as a string from the recycler view
                         String string = RecyclerAdapter.taskLocations.get(positions);
                         // take this string to remove the object from the HashMap (location + description)
                         TaskLocations.taskLocations.remove(string);
                         TaskLocations.locationID.remove(string);
+                        notificationManager.deleteNotificationChannel(string);
 
                         // take string to remove task from database
                         try {

@@ -1,6 +1,7 @@
 package com.example.msc;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
 import android.content.Intent;
 
 import androidx.annotation.Nullable;
@@ -20,8 +21,10 @@ public class EndTaskService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         String removeItem = intent.getStringExtra("toDelete");
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         TaskLocations.taskLocations.remove(removeItem);
         TaskLocations.locationID.remove(removeItem);
+        notificationManager.deleteNotificationChannel(removeItem);
 
         try {
             new BackgroundTask<Void>(() -> {
