@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
@@ -26,7 +25,6 @@ import com.example.msc.persistence.MyDatabaseAccessor;
 import com.example.msc.persistence.dao.TaskDao;
 import com.example.msc.ui.settings.SettingsActivity;
 import com.example.msc.util.BackgroundTask;
-import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -36,7 +34,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.msc.persistence.entities.Task;
 
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 
@@ -192,12 +189,9 @@ public class AddTaskActivity extends AppCompatActivity implements OnMapReadyCall
             } catch (final ExecutionException | InterruptedException exception) {
                 exception.printStackTrace();
             }
-
             Toast.makeText(this, addtaskQuery, Toast.LENGTH_LONG).show();
-
         }
         finish();
-
     }
 
     private void createNotificationChannel(String channelName) {

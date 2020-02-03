@@ -1,33 +1,19 @@
 package com.example.msc;
 
 import android.Manifest;
-import android.app.ActivityManager;
-import android.app.IntentService;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
-import android.preference.PreferenceManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
@@ -36,17 +22,12 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.Executor;
+
 
 
 public class BackgroundLocationService extends Service {
@@ -56,7 +37,6 @@ public class BackgroundLocationService extends Service {
     private final int locationPermission = 14;
 
     private FusedLocationProviderClient mFusedLocationClient; // client that enables position updates
-    private Location latestUserLocation; // updated current user location
     private LocationCallback locationCallback; // location updates
     private LocationRequest mLocationRequest; // background
 
@@ -80,107 +60,98 @@ public class BackgroundLocationService extends Service {
             }
         } else {
 
-        if (intent.getAction().equals(startForeground)) {
-            isRunning = true;
-            Log.d("myApp", "onStartCommand: invoked");
-            Log.d("myApp", ""+geofenceArrayList);
+            if (intent.getAction().equals(startForeground)) {
+                isRunning = true;
 
-            Intent notificationIntent = new Intent(this, MainActivity.class);
+                Intent notificationIntent = new Intent(this, MainActivity.class);
 
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                    notificationIntent, 0);
+                PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                        notificationIntent, 0);
 
 
-            Notification foregroundNotification =
-                    new Notification.Builder(this, "38")
-                            .setContentTitle("Background Location")
-                            .setContentText("MSC uses background location.")
-                            .setSmallIcon(R.drawable.clipboard)
-                            .setContentIntent(pendingIntent)
-                            .setTicker(getText(R.string.app_name))
-                            .build();
+                Notification foregroundNotification =
+                        new Notification.Builder(this, "38")
+                                .setContentTitle("Background Location")
+                                .setContentText("MSC uses background location.")
+                                .setSmallIcon(R.drawable.clipboard)
+                                .setContentIntent(pendingIntent)
+                                .setTicker(getText(R.string.app_name))
+                                .build();
 
-            startForeground(11, foregroundNotification);
+                startForeground(11, foregroundNotification);
 
-            geofencingClient = LocationServices.getGeofencingClient(this);
+                geofencingClient = LocationServices.getGeofencingClient(this);
 
-            if (!geofenceArrayList.isEmpty()) {
-                geofenceArrayList = new ArrayList<Geofence>();
-                populateGeofenceList();
-                removeGeofences(geofencingClient);
-                addGeofences(geofencingClient);
-                Log.d("myApp", ""+geofenceArrayList);
-                Log.d("myApp", ""+TaskLocations.taskLocations);
-            } else if (!(TaskLocations.taskLocations.size()==0)) {
-                populateGeofenceList();
-                removeGeofences(geofencingClient);
-                addGeofences(geofencingClient);
-                Log.d("myApp", ""+geofenceArrayList);
-                Log.d("myApp", ""+TaskLocations.taskLocations);
-            }
+                if (!geofenceArrayList.isEmpty()) {
+                    geofenceArrayList = new ArrayList<Geofence>();
+                    populateGeofenceList();
+                    //removeGeofences(geofencingClient);
+                    addGeofences(geofencingClient);
+                    //Log.d("myApp", ""+geofenceArrayList);
+                    //Log.d("myApp", ""+TaskLocations.taskLocations);
+                } else if (!(TaskLocations.taskLocations.size()==0)) {
+                    populateGeofenceList();
+                    //removeGeofences(geofencingClient);
+                    addGeofences(geofencingClient);
+                    //Log.d("myApp", ""+geofenceArrayList);
+                    //Log.d("myApp", ""+TaskLocations.taskLocations);
+                }
 
-            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+                mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-            // mandatory to start location updates
-            mLocationRequest = new LocationRequest();
-            mLocationRequest.setInterval(10000); // 10 seconds interval
-            mLocationRequest.setFastestInterval(10000);
-            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                // mandatory to start location updates
+                mLocationRequest = new LocationRequest();
+                mLocationRequest.setInterval(10000); // 10 seconds interval
+                mLocationRequest.setFastestInterval(10000);
+                mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-            // creates a location callback that allows the tracking of the user location
-            locationCallback = new LocationCallback() {
-                @Override
-                public void onLocationResult(LocationResult locationResult) {
-                    if (locationResult == null) {
-                        return;
-                    }
-                    for (Location location : locationResult.getLocations()) {
-                        Log.d("myApp", "SERVICELOCATION CHANGED "+location);
-
-                        if (!geofenceArrayList.isEmpty()) {
-                            geofenceArrayList = new ArrayList<Geofence>();
-                            if (!(TaskLocations.taskLocations.size()==0)){
-                            populateGeofenceList();
-                            removeGeofences(geofencingClient);
-                            addGeofences(geofencingClient);
-                            Log.d("myApp", ""+geofenceArrayList);
-                            Log.d("myApp", ""+TaskLocations.taskLocations);}
-                        } else if (TaskLocations.taskLocations.size()==0) {
-                            Log.d("myApp", ""+TaskLocations.taskLocations);
-                            Log.d("myApp", ""+geofenceArrayList);
+                // creates a location callback that allows the tracking of the user location
+                locationCallback = new LocationCallback() {
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
+                        if (locationResult == null) {
                             return;
-                        } else {
-                            populateGeofenceList();
-                            removeGeofences(geofencingClient);
-                            addGeofences(geofencingClient);
-                            Log.d("myApp", ""+geofenceArrayList);
-                            Log.d("myApp", ""+TaskLocations.taskLocations);
-
                         }
+                        for (Location location : locationResult.getLocations()) {
+                            Log.d("myApp", "SERVICELOCATION CHANGED "+location);
 
+                            if (!geofenceArrayList.isEmpty()) {
+                                geofenceArrayList = new ArrayList<Geofence>();
+                                if (!(TaskLocations.taskLocations.size()==0)){
+                                    populateGeofenceList();
+                                    removeGeofences(geofencingClient);
+                                    addGeofences(geofencingClient);
+                                }
+                            } else if (TaskLocations.taskLocations.size()==0) {
+                                return;
+                            } else {
+                                populateGeofenceList();
+                                removeGeofences(geofencingClient);
+                                addGeofences(geofencingClient);
+                            }
+                        }
                     }
                 };
-            };
 
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                    locationCallback,
-                    Looper.getMainLooper());
+                mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                        locationCallback,
+                        Looper.getMainLooper());
 
-        }
+            }
 
-        else if (intent.getAction().equals(stopForeground) || (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            isRunning = false;
-            Log.d("myApp", "foreground stopped");
-            stopForeground(true);
-            stopSelf();
-        }
+            if (intent.getAction().equals(stopForeground) || (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+                isRunning = false;
+                Log.d("myApp", "foreground stopped");
+                stopForeground(true);
+                stopForeground(Service.STOP_FOREGROUND_REMOVE);
+                stopSelf();
+            }
 
-        return START_STICKY;
+            return START_STICKY;
 
         } return START_STICKY;
     }
-
 
 
     @Nullable
@@ -216,6 +187,7 @@ public class BackgroundLocationService extends Service {
     }
 
     public void populateGeofenceList() {
+        geofenceArrayList = new ArrayList<Geofence>();
         for (Map.Entry<String, LatLng> entry : TaskLocations.taskLocations.entrySet()) {
             geofenceArrayList.add(new Geofence.Builder()
                     .setRequestId(entry.getKey())
@@ -228,6 +200,4 @@ public class BackgroundLocationService extends Service {
                     .build());
         }
     }
-
-
 }

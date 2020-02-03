@@ -12,6 +12,7 @@ import com.example.msc.persistence.entities.User;
 import com.example.msc.ui.recovery.util.GMailSender;
 import com.example.msc.ui.util.Validator;
 import com.example.msc.util.BackgroundTask;
+import com.example.msc.util.Encryptor;
 
 public class AccountRecoveryActivity extends AppCompatActivity {
     @Override
@@ -34,7 +35,7 @@ public class AccountRecoveryActivity extends AppCompatActivity {
                         if(usr == null || !usr.getUsername().equals(str))
                             return "Error! Username not found...";
 
-                        new Thread(() -> new GMailSender().sendMail("Account recovery", "Username: " + str + "\nPassword: " + usr.getPassword() + "\n", usr.getEmail())).start();
+                        new Thread(() -> new GMailSender().sendMail("Account recovery", "Username: " + str + "\nPassword: " + Encryptor.decrypt(usr.getPassword()) + "\n", usr.getEmail())).start();
 
                         return "";
                     }, findViewById(R.id.progress_bar), send, user).execute().get();

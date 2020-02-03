@@ -2,7 +2,6 @@ package com.example.msc;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -21,10 +20,8 @@ public class EndTaskService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         String removeItem = intent.getStringExtra("toDelete");
-        Log.d("myApp", "onHandleIntent: "+removeItem );
         TaskLocations.taskLocations.remove(removeItem);
         TaskLocations.locationID.remove(removeItem);
-        Log.d("myApp", "onHandleIntent: deleted" );
 
         try {
             new BackgroundTask<Void>(() -> {

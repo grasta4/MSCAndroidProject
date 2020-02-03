@@ -1,5 +1,6 @@
 package com.example.msc.ui.login;
 
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -23,8 +24,12 @@ import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+
+import org.json.JSONException;
+
 import java.util.concurrent.ExecutionException;
 
 public class LoginActivity extends AppCompatActivity {
@@ -78,11 +83,21 @@ public class LoginActivity extends AppCompatActivity {
         FBLoginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(com.facebook.login.LoginResult loginResult) {
-                SettingsActivity.U_NAME = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this)
-                        .getString("fb_name", "Unknown");
+                final GraphRequest request = GraphRequest.newMeRequest(loginResult.getAccessToken(), (object, response) -> {
+                    try {
+                        SettingsActivity.U_NAME = object.getString("name");
+                        SettingsActivity.APP_LOGIN = false;
 
-                SettingsActivity.APP_LOGIN = false;
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    } catch(final JSONException exception) {
+                        exception.printStackTrace();
+                    }
+                });
+                Bundle parameters = new Bundle();
+
+                parameters.putString("fields", "id,name,email,gender,birthday");
+                request.setParameters(parameters);
+                request.executeAsync();
             }
 
             @Override
@@ -92,12 +107,27 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onError(FacebookException error) {
-                System.out.println(error);
-                Log.d("myApp", "onError: " + error.getMessage() + error.getStackTrace() + error.getCause());
+
             }
         });
 
         if(accessToken != null && !accessToken.isExpired())
             startActivity(new Intent(this, MainActivity.class));
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.cancelAll();
+
     }
 }

@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,12 +20,9 @@ import com.example.msc.ui.login.LoginActivity;
 import com.example.msc.ui.settings.SettingsActivity;
 import com.example.msc.util.BackgroundTask;
 import com.facebook.login.LoginManager;
-import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.maps.model.LatLng;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 
@@ -42,15 +37,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         Log.d("myApp", "onCreate: "+BackgroundLocationService.isRunning);
 
-        if (BackgroundLocationService.isRunning) {
-          // foregroundService = new Intent(MainActivity.this, BackgroundLocationService.class);
-          //  foregroundService.setAction(BackgroundLocationService.stopForeground);
-           // stopService(foregroundService);
-        } else {
-            createNotificationChannel();
+        if (!BackgroundLocationService.isRunning) {
             foregroundService = new Intent(MainActivity.this, BackgroundLocationService.class);
             startForegroundService(foregroundService.setAction(BackgroundLocationService.startForeground));
         }
@@ -63,8 +52,11 @@ public class MainActivity extends AppCompatActivity {
 
                 final List<Task> taskList = taskDao.getTasksByUser(SettingsActivity.U_NAME);
 
+
                 for (Task task : taskList) {
                     TaskLocations.taskLocations.put(task.getName(), new LatLng(task.getLatitude(), task.getLongitude()));
+                    TaskLocations.locationID.add(task.getName());
+                    createNotificationChannel(task.getName());
                 }
 
                 return null;
@@ -94,10 +86,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void logout(View v) {
-        TaskLocations.taskLocations = new HashMap<String, LatLng>();
+
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        for (String notification : TaskLocations.locationID) {
+            notificationManager.deleteNotificationChannel(notification);
+        }
+
+        TaskLocations.taskLocations.clear();
+        TaskLocations.locationID.clear();
+
         Intent logoutIntent = new Intent(this, LoginActivity.class);
         LoginManager.getInstance().logOut();
         startActivity(logoutIntent);
+
+        notificationManager.cancelAll();
     }
 
     @Override
@@ -148,14 +151,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void createNotificationChannel() {
+    public void settings(View v) {
+        Intent settingsIntent = new Intent(this, SettingsActivity.class);
+        startActivity(settingsIntent);
+    }
+
+    private void createNotificationChannel(String channelName) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "channel";
+            CharSequence name = channelName;
             String description = "test";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("channel", name, importance);
+            NotificationChannel channel = new NotificationChannel(channelName, name, importance);
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
@@ -163,10 +171,4 @@ public class MainActivity extends AppCompatActivity {
             notificationManager.createNotificationChannel(channel);
         }
     }
-
-    public void settings(View v) {
-        Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        startActivity(settingsIntent);
-    }
-
 }

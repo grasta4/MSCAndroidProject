@@ -9,8 +9,6 @@ import android.support.v7.widget.RecyclerView;
 
 import com.example.msc.persistence.MyDatabaseAccessor;
 import com.example.msc.persistence.dao.TaskDao;
-import com.example.msc.persistence.entities.Task;
-import com.example.msc.ui.settings.SettingsActivity;
 import com.example.msc.util.BackgroundTask;
 
 import java.util.concurrent.ExecutionException;

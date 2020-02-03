@@ -5,9 +5,10 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "task", primaryKeys = {"name", "user"})
+@Entity(tableName = "task")
 public class Task {
 
+    @PrimaryKey
     @NonNull
     private String name;
 

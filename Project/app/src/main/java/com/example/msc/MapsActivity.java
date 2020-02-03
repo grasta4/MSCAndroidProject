@@ -1,7 +1,6 @@
 package com.example.msc;
 
 import android.Manifest;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -9,10 +8,8 @@ import android.graphics.Color;
 import android.location.Location;
 import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
@@ -22,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -49,7 +45,6 @@ import java.util.Map;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private LatLng selectedPosition = null; // maybe not necessary
     private final int locationPermission = 14;
     private LocationRequest mLocationRequest; // background
     private Marker userMarker;
@@ -72,7 +67,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         isRunning = true;
 
-        // todo: for background
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mFusedLocationClient.getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
@@ -84,9 +78,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
 
-
-
-        // TODO: FOR BACKGROUND
         // mandatory to start location updates
         mLocationRequest = new LocationRequest(); // initiates a location request
         mLocationRequest.setInterval(4000); // 4 seconds interval
@@ -200,25 +191,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .radius(200)
                     .strokeColor(Color.parseColor("#2271cce7"))
                     .fillColor(Color.parseColor("#2271cce7")));
-
-
         }
-
 
         checkPermission();
-
-
-        //todo: maybe remove
-        /*
-         * Moves camera to the newly created task if activity is called through intent. If activity
-         * is called naturally, camera moves to the user's location.
-         */
-        Bundle locationBundle = getIntent().getExtras();
-        if (locationBundle != null) {
-            selectedPosition = getIntent().getExtras().getParcelable("SelectedLocation");
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPosition, 16.0f));
-        }
-
     }
 
 
