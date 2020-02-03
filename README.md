@@ -11,17 +11,17 @@ Context-aware functionalities
 •	User position:
 	The user position will be monitored constantly to track if the user is near to a task. As soon as the user
 	enters the task, the system thereby knows when to send out alerts. This will also help the user track tasks
-	by using the map function. (GeoFence?)
+	by using the map function.
 	
 •	User identity:
 	With user identity, the app can easily track the preferences of the user and it will also be able to track
 	different users.
 	
-•	Date, time of day:
+•	Date, time of day: (possibly)
 	If the user wants to specify tasks with time restrictions or special alerts to different times, the application can
 	keep track of the date and time of the day.
 	
-•	Calendar:
+•	Calendar: (possibly)
 	Mostly comparable to 'Date, time of day'.
 	
 •	Orientation (possibly)
@@ -33,7 +33,7 @@ Features
 •	Add task: new tasks can be added with associated description
 •	Complete task: completed tasks will be erased from the map
 •	Proximity feature: notify the user when they are close to a task location
-•	Social media connection (possibly)
+•	Social media connection - Facebook Login
 •	Expired tasks: if a task is expired or close to expiring, the task will be removed from the list (possibly)
 •	Temperature: if it is too hot or too cold to perform a task, it might not be displayed (possibly)
 
